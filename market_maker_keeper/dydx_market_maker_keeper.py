@@ -30,7 +30,7 @@ from market_maker_keeper.cex_api import CEXKeeperAPI
 class DyDxMarketMakerKeeper(CEXKeeperAPI):
     """
     Keeper acting as a market maker on DyDx.
-    Although portions of DyDx are onchain, 
+    Although portions of DyDx are onchain,
     full order book functionality requires offchain components.
     """
 

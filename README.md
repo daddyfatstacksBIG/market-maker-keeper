@@ -704,14 +704,14 @@ git submodule update --init --recursive
 docker-compose build keeper
 ```
 
-6. **Create configuration directory.**  
+6. **Create configuration directory.**
    This directory will hold all configuration files (bands) for keepers
 
 ```
 mkdir docker-config
 ```
 
-7. **Create environment variables.**  
+7. **Create environment variables.**
    Create a file named `.env` and add all environment variables required to run
    keeper. `docker-compose.yml` file contains a configuration example for
    Coinbase ETH-DAI keeper that can be started with an `.env` file similar with
@@ -725,12 +725,12 @@ ETH_DAI_PRICE_FEED=ws://user:readonly@localhost:7777/price/ETH-DAI/socket
 COINBASE_ETH_DAI_BANDS=coinbase-ethdai-bands.json
 ```
 
-where:  
+where:
 `COINBASE_API_KEY`, `COINBASE_SECRET_KEY` and `COINBASE_PASSWORD` are specific
-to your Coinbase account  
+to your Coinbase account
 `ETH_DAI_PRICE_FEED` is the price feed that keeper will use to place orders on
 Coinbase (see https://github.com/makerdao/uniswap-price-feed for how you can
-start a Uniswap price feed)  
+start a Uniswap price feed)
 `COINBASE_ETH_DAI_BANDS` is the name of bands file to be used by keeper (file
 should be placed in `docker-config` directory)
 
