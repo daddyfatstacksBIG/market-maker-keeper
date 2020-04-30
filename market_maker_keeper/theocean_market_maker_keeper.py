@@ -47,99 +47,185 @@ class TheOceanMarketMakerKeeper:
     logger = logging.getLogger()
 
     def __init__(self, args: list, **kwargs):
-        parser = argparse.ArgumentParser(prog='theocean-market-maker-keeper')
+        parser = argparse.ArgumentParser(prog="theocean-market-maker-keeper")
 
-        parser.add_argument("--rpc-host", type=str, default="localhost",
-                            help="JSON-RPC host (default: `localhost')")
+        parser.add_argument(
+            "--rpc-host",
+            type=str,
+            default="localhost",
+            help="JSON-RPC host (default: `localhost')",
+        )
 
-        parser.add_argument("--rpc-port", type=int, default=8545,
-                            help="JSON-RPC port (default: `8545')")
+        parser.add_argument(
+            "--rpc-port", type=int, default=8545, help="JSON-RPC port (default: `8545')"
+        )
 
-        parser.add_argument("--rpc-timeout", type=int, default=10,
-                            help="JSON-RPC timeout (in seconds, default: 10)")
+        parser.add_argument(
+            "--rpc-timeout",
+            type=int,
+            default=10,
+            help="JSON-RPC timeout (in seconds, default: 10)",
+        )
 
-        parser.add_argument("--eth-from", type=str, required=True,
-                            help="Ethereum account from which to send transactions")
+        parser.add_argument(
+            "--eth-from",
+            type=str,
+            required=True,
+            help="Ethereum account from which to send transactions",
+        )
 
-        parser.add_argument("--eth-key", type=str, nargs='*',
-                            help="Ethereum private key(s) to use (e.g. 'key_file=aaa.json,pass_file=aaa.pass')")
+        parser.add_argument(
+            "--eth-key",
+            type=str,
+            nargs="*",
+            help="Ethereum private key(s) to use (e.g. 'key_file=aaa.json,pass_file=aaa.pass')",
+        )
 
-        parser.add_argument("--exchange-address", type=str, required=True,
-                            help="Ethereum address of the 0x Exchange contract")
+        parser.add_argument(
+            "--exchange-address",
+            type=str,
+            required=True,
+            help="Ethereum address of the 0x Exchange contract",
+        )
 
-        parser.add_argument("--theocean-api-server", type=str, default='https://api.theocean.trade',
-                            help="Address of the TheOcean API (default: 'https://api.theocean.trade')")
+        parser.add_argument(
+            "--theocean-api-server",
+            type=str,
+            default="https://api.theocean.trade",
+            help="Address of the TheOcean API (default: 'https://api.theocean.trade')",
+        )
 
-        parser.add_argument("--theocean-api-key", type=str, required=True,
-                            help="API key for the TheOcean API")
+        parser.add_argument(
+            "--theocean-api-key",
+            type=str,
+            required=True,
+            help="API key for the TheOcean API",
+        )
 
-        parser.add_argument("--theocean-api-secret", type=str, required=True,
-                            help="API secret for the TheOcean API")
+        parser.add_argument(
+            "--theocean-api-secret",
+            type=str,
+            required=True,
+            help="API secret for the TheOcean API",
+        )
 
-        parser.add_argument("--theocean-api-timeout", type=float, default=9.5,
-                            help="Timeout for accessing the TheOcean API (in seconds, default: 9.5)")
+        parser.add_argument(
+            "--theocean-api-timeout",
+            type=float,
+            default=9.5,
+            help="Timeout for accessing the TheOcean API (in seconds, default: 9.5)",
+        )
 
-        parser.add_argument("--buy-token-address", type=str, required=True,
-                            help="Ethereum address of the buy token")
+        parser.add_argument(
+            "--buy-token-address",
+            type=str,
+            required=True,
+            help="Ethereum address of the buy token",
+        )
 
-        parser.add_argument("--sell-token-address", type=str, required=True,
-                            help="Ethereum address of the sell token")
+        parser.add_argument(
+            "--sell-token-address",
+            type=str,
+            required=True,
+            help="Ethereum address of the sell token",
+        )
 
-        parser.add_argument("--config", type=str, required=True,
-                            help="Bands configuration file")
+        parser.add_argument(
+            "--config", type=str, required=True, help="Bands configuration file"
+        )
 
-        parser.add_argument("--price-feed", type=str, required=True,
-                            help="Source of price feed")
+        parser.add_argument(
+            "--price-feed", type=str, required=True, help="Source of price feed"
+        )
 
-        parser.add_argument("--price-feed-expiry", type=int, default=120,
-                            help="Maximum age of the price feed (in seconds, default: 120)")
+        parser.add_argument(
+            "--price-feed-expiry",
+            type=int,
+            default=120,
+            help="Maximum age of the price feed (in seconds, default: 120)",
+        )
 
-        parser.add_argument("--spread-feed", type=str,
-                            help="Source of spread feed")
+        parser.add_argument("--spread-feed", type=str, help="Source of spread feed")
 
-        parser.add_argument("--spread-feed-expiry", type=int, default=3600,
-                            help="Maximum age of the spread feed (in seconds, default: 3600)")
+        parser.add_argument(
+            "--spread-feed-expiry",
+            type=int,
+            default=3600,
+            help="Maximum age of the spread feed (in seconds, default: 3600)",
+        )
 
-        parser.add_argument("--control-feed", type=str,
-                            help="Source of control feed")
+        parser.add_argument("--control-feed", type=str, help="Source of control feed")
 
-        parser.add_argument("--control-feed-expiry", type=int, default=86400,
-                            help="Maximum age of the control feed (in seconds, default: 86400)")
+        parser.add_argument(
+            "--control-feed-expiry",
+            type=int,
+            default=86400,
+            help="Maximum age of the control feed (in seconds, default: 86400)",
+        )
 
-        parser.add_argument("--order-history", type=str,
-                            help="Endpoint to report active orders to")
+        parser.add_argument(
+            "--order-history", type=str, help="Endpoint to report active orders to"
+        )
 
-        parser.add_argument("--order-history-every", type=int, default=30,
-                            help="Frequency of reporting active orders (in seconds, default: 30)")
+        parser.add_argument(
+            "--order-history-every",
+            type=int,
+            default=30,
+            help="Frequency of reporting active orders (in seconds, default: 30)",
+        )
 
-        parser.add_argument("--gas-price", type=int, default=0,
-                            help="Gas price (in Wei)")
+        parser.add_argument(
+            "--gas-price", type=int, default=0, help="Gas price (in Wei)"
+        )
 
-        parser.add_argument("--smart-gas-price", dest='smart_gas_price', action='store_true',
-                            help="Use smart gas pricing strategy, based on the ethgasstation.info feed")
+        parser.add_argument(
+            "--smart-gas-price",
+            dest="smart_gas_price",
+            action="store_true",
+            help="Use smart gas pricing strategy, based on the ethgasstation.info feed",
+        )
 
-        parser.add_argument("--ethgasstation-api-key", type=str,
-                            default=None, help="ethgasstation API key")
+        parser.add_argument(
+            "--ethgasstation-api-key",
+            type=str,
+            default=None,
+            help="ethgasstation API key",
+        )
 
-        parser.add_argument("--refresh-frequency", type=int, default=3,
-                            help="Order book refresh frequency (in seconds, default: 3)")
+        parser.add_argument(
+            "--refresh-frequency",
+            type=int,
+            default=3,
+            help="Order book refresh frequency (in seconds, default: 3)",
+        )
 
-        parser.add_argument("--debug", dest='debug', action='store_true',
-                            help="Enable debug output")
+        parser.add_argument(
+            "--debug", dest="debug", action="store_true", help="Enable debug output"
+        )
 
         self.arguments = parser.parse_args(args)
         setup_logging(self.arguments)
 
-        self.web3 = kwargs['web3'] if 'web3' in kwargs else Web3(HTTPProvider(endpoint_uri=f"http://{self.arguments.rpc_host}:{self.arguments.rpc_port}",
-                                                                              request_kwargs={"timeout": self.arguments.rpc_timeout}))
+        self.web3 = (
+            kwargs["web3"]
+            if "web3" in kwargs
+            else Web3(
+                HTTPProvider(
+                    endpoint_uri=f"http://{self.arguments.rpc_host}:{self.arguments.rpc_port}",
+                    request_kwargs={"timeout": self.arguments.rpc_timeout},
+                )
+            )
+        )
         self.web3.eth.defaultAccount = self.arguments.eth_from
         self.our_address = Address(self.arguments.eth_from)
         register_keys(self.web3, self.arguments.eth_key)
 
         self.token_buy = ERC20Token(
-            web3=self.web3, address=Address(self.arguments.buy_token_address))
+            web3=self.web3, address=Address(self.arguments.buy_token_address)
+        )
         self.token_sell = ERC20Token(
-            web3=self.web3, address=Address(self.arguments.sell_token_address))
+            web3=self.web3, address=Address(self.arguments.sell_token_address)
+        )
         self.pair = Pair(self.token_sell.address, self.token_buy.address)
         self.bands_config = ReloadableConfig(self.arguments.config)
         self.price_max_decimals = None
@@ -147,28 +233,34 @@ class TheOceanMarketMakerKeeper:
         self.price_feed = PriceFeedFactory().create_price_feed(self.arguments)
         self.spread_feed = create_spread_feed(self.arguments)
         self.control_feed = create_control_feed(self.arguments)
-        self.order_history_reporter = create_order_history_reporter(
-            self.arguments)
+        self.order_history_reporter = create_order_history_reporter(self.arguments)
 
         self.history = History()
         self.zrx_exchange = ZrxExchangeV2(
-            web3=self.web3, address=Address(self.arguments.exchange_address))
-        self.theocean_api = TheOceanApi(self.zrx_exchange,
-                                        self.arguments.theocean_api_server,
-                                        self.arguments.theocean_api_key,
-                                        self.arguments.theocean_api_secret,
-                                        self.arguments.theocean_api_timeout)
+            web3=self.web3, address=Address(self.arguments.exchange_address)
+        )
+        self.theocean_api = TheOceanApi(
+            self.zrx_exchange,
+            self.arguments.theocean_api_server,
+            self.arguments.theocean_api_key,
+            self.arguments.theocean_api_secret,
+            self.arguments.theocean_api_timeout,
+        )
 
         self.order_book_manager = OrderBookManager(
-            refresh_frequency=self.arguments.refresh_frequency)
+            refresh_frequency=self.arguments.refresh_frequency
+        )
         self.order_book_manager.get_orders_with(
-            lambda: self.theocean_api.get_orders(self.pair))
+            lambda: self.theocean_api.get_orders(self.pair)
+        )
         self.order_book_manager.get_balances_with(lambda: self.get_balances())
         self.order_book_manager.place_orders_with(self.place_order_function)
         self.order_book_manager.cancel_orders_with(
-            lambda order: self.theocean_api.cancel_order(order.order_id))
+            lambda order: self.theocean_api.cancel_order(order.order_id)
+        )
         self.order_book_manager.enable_history_reporting(
-            self.order_history_reporter, self.our_buy_orders, self.our_sell_orders)
+            self.order_history_reporter, self.our_buy_orders, self.our_sell_orders
+        )
         self.order_book_manager.start()
 
     def main(self):
@@ -184,24 +276,29 @@ class TheOceanMarketMakerKeeper:
         # Get maximum number of decimals for prices.
         market = self.theocean_api.get_market(self.pair)
 
-        assert(int(market['baseToken']['decimals']) == 18)
-        assert(int(market['quoteToken']['decimals']) == 18)
-        assert(int(market['baseToken']['precision']) ==
-               int(market['quoteToken']['precision']))
+        assert int(market["baseToken"]["decimals"]) == 18
+        assert int(market["quoteToken"]["decimals"]) == 18
+        assert int(market["baseToken"]["precision"]) == int(
+            market["quoteToken"]["precision"]
+        )
 
-        self.price_max_decimals = 0 - int(market['baseToken']['precision'])
+        self.price_max_decimals = 0 - int(market["baseToken"]["precision"])
 
-        assert(self.price_max_decimals >= 0)
+        assert self.price_max_decimals >= 0
 
     def shutdown(self):
         self.order_book_manager.cancel_all_orders()
 
     def approve(self):
         self.zrx_exchange.approve(
-            [self.token_sell, self.token_buy], directly(gas_price=self.gas_price))
+            [self.token_sell, self.token_buy], directly(gas_price=self.gas_price)
+        )
 
     def get_balances(self):
-        return self.theocean_api.get_balance(self.pair.sell_token), self.theocean_api.get_balance(self.pair.buy_token)
+        return (
+            self.theocean_api.get_balance(self.pair.sell_token),
+            self.theocean_api.get_balance(self.pair.buy_token),
+        )
 
     def our_sell_balance(self, balances) -> Wad:
         return balances[0]
@@ -216,38 +313,40 @@ class TheOceanMarketMakerKeeper:
         return list(filter(lambda order: not order.is_sell, our_orders))
 
     def synchronize_orders(self):
-        bands = Bands.read(self.bands_config, self.spread_feed,
-                           self.control_feed, self.history)
+        bands = Bands.read(
+            self.bands_config, self.spread_feed, self.control_feed, self.history
+        )
         order_book = self.order_book_manager.get_order_book()
         target_price = self.price_feed.get_price()
 
         # Cancel orders
-        cancellable_orders = bands.cancellable_orders(our_buy_orders=self.our_buy_orders(order_book.orders),
-                                                      our_sell_orders=self.our_sell_orders(
-                                                          order_book.orders),
-                                                      target_price=target_price)
+        cancellable_orders = bands.cancellable_orders(
+            our_buy_orders=self.our_buy_orders(order_book.orders),
+            our_sell_orders=self.our_sell_orders(order_book.orders),
+            target_price=target_price,
+        )
         if len(cancellable_orders) > 0:
             self.order_book_manager.cancel_orders(cancellable_orders)
             return
 
         # Do not place new orders if order book state is not confirmed
         if order_book.orders_being_placed or order_book.orders_being_cancelled:
-            self.logger.debug(
-                "Order book is in progress, not placing new orders")
+            self.logger.debug("Order book is in progress, not placing new orders")
             return
 
         # Place new orders
-        self.order_book_manager.place_orders(bands.new_orders(our_buy_orders=self.our_buy_orders(order_book.orders),
-                                                              our_sell_orders=self.our_sell_orders(
-                                                                  order_book.orders),
-                                                              our_buy_balance=self.our_buy_balance(
-                                                                  order_book.balances),
-                                                              our_sell_balance=self.our_sell_balance(
-                                                                  order_book.balances),
-                                                              target_price=target_price)[0])
+        self.order_book_manager.place_orders(
+            bands.new_orders(
+                our_buy_orders=self.our_buy_orders(order_book.orders),
+                our_sell_orders=self.our_sell_orders(order_book.orders),
+                our_buy_balance=self.our_buy_balance(order_book.balances),
+                our_sell_balance=self.our_sell_balance(order_book.balances),
+                target_price=target_price,
+            )[0]
+        )
 
     def place_order_function(self, new_order: NewOrder):
-        assert(isinstance(new_order, NewOrder))
+        assert isinstance(new_order, NewOrder)
 
         pair = self.pair
         is_sell = new_order.is_sell
@@ -255,18 +354,21 @@ class TheOceanMarketMakerKeeper:
         amount = new_order.pay_amount if new_order.is_sell else new_order.buy_amount
 
         new_order_id = self.theocean_api.place_order(
-            pair=pair, is_sell=is_sell, price=price, amount=amount)
+            pair=pair, is_sell=is_sell, price=price, amount=amount
+        )
 
         if new_order_id is not None:
-            return Order(order_id=new_order_id,
-                         pair=pair,
-                         is_sell=is_sell,
-                         price=price,
-                         amount=amount)
+            return Order(
+                order_id=new_order_id,
+                pair=pair,
+                is_sell=is_sell,
+                price=price,
+                amount=amount,
+            )
 
         else:
             return None
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     TheOceanMarketMakerKeeper(sys.argv[1:]).main()

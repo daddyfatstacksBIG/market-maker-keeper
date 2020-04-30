@@ -45,13 +45,16 @@ class DEXKeeperAPI:
 
         setup_logging(arguments)
 
-        if arguments.__contains__('web3'):
+        if arguments.__contains__("web3"):
             self.web3 = arguments.web3
         else:
-            web3_endpoint = f"http://{self.arguments.rpc_host}:{self.arguments.rpc_port}"
+            web3_endpoint = (
+                f"http://{self.arguments.rpc_host}:{self.arguments.rpc_port}"
+            )
             web3_options = {"timeout": self.arguments.rpc_timeout}
-            self.web3 = Web3(HTTPProvider(
-                endpoint_uri=web3_endpoint, request_kwargs=web3_options))
+            self.web3 = Web3(
+                HTTPProvider(endpoint_uri=web3_endpoint, request_kwargs=web3_options)
+            )
 
         self.web3.eth.defaultAccount = self.arguments.eth_from
         self.our_address = Address(self.arguments.eth_from)
@@ -70,15 +73,18 @@ class DEXKeeperAPI:
 
     def init_order_book_manager(self, arguments: Namespace, pyex_api: PyexAPI):
         self.order_book_manager = OrderBookManager(
-            refresh_frequency=arguments.refresh_frequency)
+            refresh_frequency=arguments.refresh_frequency
+        )
         self.order_book_manager.get_orders_with(
-            lambda: pyex_api.get_orders(self.pair()))
-        self.order_book_manager.get_balances_with(
-            lambda: pyex_api.get_balances())
+            lambda: pyex_api.get_orders(self.pair())
+        )
+        self.order_book_manager.get_balances_with(lambda: pyex_api.get_balances())
         self.order_book_manager.cancel_orders_with(
-            lambda order: pyex_api.cancel_order(order.order_id))
-        self.order_book_manager.enable_history_reporting(self.order_history_reporter, self.our_buy_orders,
-                                                         self.our_sell_orders)
+            lambda order: pyex_api.cancel_order(order.order_id)
+        )
+        self.order_book_manager.enable_history_reporting(
+            self.order_history_reporter, self.our_buy_orders, self.our_sell_orders
+        )
         self.order_book_manager.start()
 
     def main(self):

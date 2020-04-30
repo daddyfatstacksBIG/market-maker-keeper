@@ -33,8 +33,8 @@ from pymaker.sai import Tub
 
 class Price(object):
     def __init__(self, buy_price: Optional[Wad], sell_price: Optional[Wad]):
-        assert(isinstance(buy_price, Wad) or buy_price is None)
-        assert(isinstance(sell_price, Wad) or sell_price is None)
+        assert isinstance(buy_price, Wad) or buy_price is None
+        assert isinstance(sell_price, Wad) or sell_price is None
 
         self.buy_price = buy_price
         self.sell_price = sell_price
@@ -49,11 +49,10 @@ class FixedPriceFeed(PriceFeed):
     logger = logging.getLogger()
 
     def __init__(self, fixed_price: Wad):
-        assert(isinstance(fixed_price, Wad))
+        assert isinstance(fixed_price, Wad)
         self.fixed_price = fixed_price
 
-        self.logger.info(
-            f"Using fixed price '{self.fixed_price}' as the price feed")
+        self.logger.info(f"Using fixed price '{self.fixed_price}' as the price feed")
 
     def get_price(self) -> Price:
         return Price(buy_price=self.fixed_price, sell_price=self.fixed_price)
@@ -61,7 +60,7 @@ class FixedPriceFeed(PriceFeed):
 
 class TubPriceFeed(PriceFeed):
     def __init__(self, tub: Tub):
-        assert(isinstance(tub, Tub))
+        assert isinstance(tub, Tub)
 
         self.ds_value = DSValue(web3=tub.web3, address=tub.pip())
 
@@ -75,8 +74,8 @@ class SetzerPriceFeed(PriceFeed):
     logger = logging.getLogger()
 
     def __init__(self, source: str, expiry: int):
-        assert(isinstance(source, str))
-        assert(isinstance(expiry, int))
+        assert isinstance(source, str)
+        assert isinstance(expiry, int)
 
         self.source = source
         self.expiry = expiry
@@ -92,20 +91,22 @@ class SetzerPriceFeed(PriceFeed):
             self._retries = 0
             self._timestamp = time.time()
 
-            self.logger.debug(
-                f"Fetched price from {self.source}: {self._price}")
+            self.logger.debug(f"Fetched price from {self.source}: {self._price}")
 
             if self._expired:
                 self.logger.info(
-                    f"Price feed from 'setzer' ({self.source}) became available")
+                    f"Price feed from 'setzer' ({self.source}) became available"
+                )
                 self._expired = False
         except:
             self._retries += 1
             if self._retries > 10:
                 self.logger.warning(
-                    f"Failed to get price from 'setzer' ({self.source}), tried {self._retries} times")
+                    f"Failed to get price from 'setzer' ({self.source}), tried {self._retries} times"
+                )
                 self.logger.warning(
-                    f"Please check if 'setzer' is installed and working correctly")
+                    f"Please check if 'setzer' is installed and working correctly"
+                )
 
     def _background_run(self):
         while True:
@@ -116,7 +117,8 @@ class SetzerPriceFeed(PriceFeed):
         if time.time() - self._timestamp > self.expiry:
             if not self._expired:
                 self.logger.warning(
-                    f"Price feed from 'setzer' ({self.source}) has expired")
+                    f"Price feed from 'setzer' ({self.source}) has expired"
+                )
                 self._expired = True
 
             return Price(buy_price=None, sell_price=None)
@@ -130,30 +132,35 @@ class GdaxPriceFeed(PriceFeed):
     logger = logging.getLogger()
 
     def __init__(self, product_id: str, expiry: int):
-        assert(isinstance(product_id, str))
-        assert(isinstance(expiry, int))
+        assert isinstance(product_id, str)
+        assert isinstance(expiry, int)
 
-        self.gdax_price_client = GdaxPriceClient(ws_url=GDAX_WS_URL,
-                                                 product_id=product_id,
-                                                 expiry=expiry)
+        self.gdax_price_client = GdaxPriceClient(
+            ws_url=GDAX_WS_URL, product_id=product_id, expiry=expiry
+        )
 
     def get_price(self) -> Price:
         gdax_price = self.gdax_price_client.get_price()
 
         if gdax_price:
-            return Price(buy_price=Wad.from_number(gdax_price), sell_price=Wad.from_number(gdax_price))
+            return Price(
+                buy_price=Wad.from_number(gdax_price),
+                sell_price=Wad.from_number(gdax_price),
+            )
 
         else:
             return Price(buy_price=None, sell_price=None)
 
 
 class GdaxMidpointPriceFeed(GdaxPriceFeed):
-
     def get_price(self) -> Price:
         gdax_midpoint_price = self.gdax_price_client.get_obook_price()
 
         if gdax_midpoint_price:
-            return Price(buy_price=Wad.from_number(gdax_midpoint_price), sell_price=Wad.from_number(gdax_midpoint_price))
+            return Price(
+                buy_price=Wad.from_number(gdax_midpoint_price),
+                sell_price=Wad.from_number(gdax_midpoint_price),
+            )
 
         else:
             return Price(buy_price=None, sell_price=None)
@@ -161,7 +168,7 @@ class GdaxMidpointPriceFeed(GdaxPriceFeed):
 
 class WebSocketPriceFeed(PriceFeed):
     def __init__(self, feed: Feed):
-        assert(isinstance(feed, Feed))
+        assert isinstance(feed, Feed)
 
         self.feed = feed
 
@@ -169,11 +176,11 @@ class WebSocketPriceFeed(PriceFeed):
         data, timestamp = self.feed.get()
 
         try:
-            if 'buyPrice' in data:
-                buy_price = Wad.from_number(data['buyPrice'])
+            if "buyPrice" in data:
+                buy_price = Wad.from_number(data["buyPrice"])
 
-            elif 'price' in data:
-                buy_price = Wad.from_number(data['price'])
+            elif "price" in data:
+                buy_price = Wad.from_number(data["price"])
 
             else:
                 buy_price = None
@@ -181,11 +188,11 @@ class WebSocketPriceFeed(PriceFeed):
             buy_price = None
 
         try:
-            if 'sellPrice' in data:
-                sell_price = Wad.from_number(data['sellPrice'])
+            if "sellPrice" in data:
+                sell_price = Wad.from_number(data["sellPrice"])
 
-            elif 'price' in data:
-                sell_price = Wad.from_number(data['price'])
+            elif "price" in data:
+                sell_price = Wad.from_number(data["price"])
 
             else:
                 sell_price = None
@@ -197,7 +204,7 @@ class WebSocketPriceFeed(PriceFeed):
 
 class AveragePriceFeed(PriceFeed):
     def __init__(self, feeds: List[PriceFeed]):
-        assert(isinstance(feeds, list))
+        assert isinstance(feeds, list)
         self.feeds = feeds
 
     def get_price(self) -> Price:
@@ -217,26 +224,32 @@ class AveragePriceFeed(PriceFeed):
                 total_sell += price.sell_price
                 count_sell += 1
 
-        buy_price = total_buy / \
-            Wad.from_number(count_buy) if count_buy > 0 else None
-        sell_price = total_sell / \
-            Wad.from_number(count_sell) if count_sell > 0 else None
+        buy_price = total_buy / Wad.from_number(count_buy) if count_buy > 0 else None
+        sell_price = (
+            total_sell / Wad.from_number(count_sell) if count_sell > 0 else None
+        )
 
         return Price(buy_price=buy_price, sell_price=sell_price)
 
 
 class ReversePriceFeed(PriceFeed):
     def __init__(self, price_feed: PriceFeed):
-        assert(isinstance(price_feed, PriceFeed))
+        assert isinstance(price_feed, PriceFeed)
         self.price_feed = price_feed
 
     def get_price(self) -> Price:
         parent_price = self.price_feed.get_price()
 
-        buy_price = Wad.from_number(
-            1) / parent_price.buy_price if parent_price.buy_price is not None else None
-        sell_price = Wad.from_number(
-            1) / parent_price.sell_price if parent_price.sell_price is not None else None
+        buy_price = (
+            Wad.from_number(1) / parent_price.buy_price
+            if parent_price.buy_price is not None
+            else None
+        )
+        sell_price = (
+            Wad.from_number(1) / parent_price.sell_price
+            if parent_price.sell_price is not None
+            else None
+        )
         return Price(buy_price=buy_price, sell_price=sell_price)
 
 
@@ -244,7 +257,7 @@ class BackupPriceFeed(PriceFeed):
     logger = logging.getLogger()
 
     def __init__(self, feeds: List[PriceFeed]):
-        assert(isinstance(feeds, list))
+        assert isinstance(feeds, list)
         self.feeds = feeds
 
     def get_price(self) -> Price:
@@ -259,78 +272,120 @@ class BackupPriceFeed(PriceFeed):
 class PriceFeedFactory:
     @staticmethod
     def create_price_feed(arguments, tub: Tub = None) -> PriceFeed:
-        return BackupPriceFeed([PriceFeedFactory._create_price_feed(price_feed, arguments.price_feed_expiry, tub)
-                                for price_feed in arguments.price_feed.split(",")])
+        return BackupPriceFeed(
+            [
+                PriceFeedFactory._create_price_feed(
+                    price_feed, arguments.price_feed_expiry, tub
+                )
+                for price_feed in arguments.price_feed.split(",")
+            ]
+        )
 
     @staticmethod
-    def _create_price_feed(price_feed_argument: str, price_feed_expiry_argument: int, tub: Optional[Tub]):
-        assert(isinstance(price_feed_argument, str))
-        assert(isinstance(price_feed_expiry_argument, int))
-        assert(isinstance(tub, Tub) or tub is None)
+    def _create_price_feed(
+        price_feed_argument: str, price_feed_expiry_argument: int, tub: Optional[Tub]
+    ):
+        assert isinstance(price_feed_argument, str)
+        assert isinstance(price_feed_expiry_argument, int)
+        assert isinstance(tub, Tub) or tub is None
 
-        if price_feed_argument == 'eth_dai-pair':
-            return GdaxPriceFeed(product_id="ETH-DAI",
-                                 expiry=price_feed_expiry_argument)
+        if price_feed_argument == "eth_dai-pair":
+            return GdaxPriceFeed(
+                product_id="ETH-DAI", expiry=price_feed_expiry_argument
+            )
 
-        if price_feed_argument == 'eth_dai-pair-midpoint':
-            return GdaxMidpointPriceFeed(product_id="ETH-DAI",
-                                         expiry=price_feed_expiry_argument)
+        if price_feed_argument == "eth_dai-pair-midpoint":
+            return GdaxMidpointPriceFeed(
+                product_id="ETH-DAI", expiry=price_feed_expiry_argument
+            )
 
-        if price_feed_argument == 'eth_dai':
-            return GdaxPriceFeed(product_id="ETH-USD",
-                                 expiry=price_feed_expiry_argument)
+        if price_feed_argument == "eth_dai":
+            return GdaxPriceFeed(
+                product_id="ETH-USD", expiry=price_feed_expiry_argument
+            )
 
-        elif price_feed_argument == 'eth_dai-setzer':
-            return AveragePriceFeed([SetzerPriceFeed('kraken', expiry=price_feed_expiry_argument),
-                                     SetzerPriceFeed('gemini', expiry=price_feed_expiry_argument)])
+        elif price_feed_argument == "eth_dai-setzer":
+            return AveragePriceFeed(
+                [
+                    SetzerPriceFeed("kraken", expiry=price_feed_expiry_argument),
+                    SetzerPriceFeed("gemini", expiry=price_feed_expiry_argument),
+                ]
+            )
 
-        elif price_feed_argument == 'eth_dai-tub':
+        elif price_feed_argument == "eth_dai-tub":
             if tub is not None:
                 price_feed = TubPriceFeed(tub)
             else:
                 raise Exception(
-                    f"'--price-feed eth_dai-tub' cannot be used as this keeper does not know about 'Tub'")
+                    f"'--price-feed eth_dai-tub' cannot be used as this keeper does not know about 'Tub'"
+                )
 
-        elif price_feed_argument == 'btc_dai':
-            return GdaxPriceFeed(product_id="BTC-USD",
-                                 expiry=price_feed_expiry_argument)
+        elif price_feed_argument == "btc_dai":
+            return GdaxPriceFeed(
+                product_id="BTC-USD", expiry=price_feed_expiry_argument
+            )
 
-        elif price_feed_argument == 'dai_eth':
-            return ReversePriceFeed(PriceFeedFactory._create_price_feed('eth_dai', price_feed_expiry_argument, tub))
+        elif price_feed_argument == "dai_eth":
+            return ReversePriceFeed(
+                PriceFeedFactory._create_price_feed(
+                    "eth_dai", price_feed_expiry_argument, tub
+                )
+            )
 
-        elif price_feed_argument == 'dai_eth-pair':
-            return ReversePriceFeed(PriceFeedFactory._create_price_feed('eth_dai-pair', price_feed_expiry_argument, tub))
+        elif price_feed_argument == "dai_eth-pair":
+            return ReversePriceFeed(
+                PriceFeedFactory._create_price_feed(
+                    "eth_dai-pair", price_feed_expiry_argument, tub
+                )
+            )
 
-        elif price_feed_argument == 'dai_eth-setzer':
-            return ReversePriceFeed(PriceFeedFactory._create_price_feed('eth_dai-setzer', price_feed_expiry_argument, tub))
+        elif price_feed_argument == "dai_eth-setzer":
+            return ReversePriceFeed(
+                PriceFeedFactory._create_price_feed(
+                    "eth_dai-setzer", price_feed_expiry_argument, tub
+                )
+            )
 
-        elif price_feed_argument == 'dai_eth-tub':
-            return ReversePriceFeed(PriceFeedFactory._create_price_feed('eth_dai-tub', price_feed_expiry_argument, tub))
+        elif price_feed_argument == "dai_eth-tub":
+            return ReversePriceFeed(
+                PriceFeedFactory._create_price_feed(
+                    "eth_dai-tub", price_feed_expiry_argument, tub
+                )
+            )
 
-        elif price_feed_argument == 'dai_btc':
-            return ReversePriceFeed(PriceFeedFactory._create_price_feed('btc_dai', price_feed_expiry_argument, tub))
+        elif price_feed_argument == "dai_btc":
+            return ReversePriceFeed(
+                PriceFeedFactory._create_price_feed(
+                    "btc_dai", price_feed_expiry_argument, tub
+                )
+            )
 
-        elif price_feed_argument == 'zrx_usd-pair-midpoint':
-            return GdaxMidpointPriceFeed(product_id="ZRX-USD",
-                                         expiry=price_feed_expiry_argument)
+        elif price_feed_argument == "zrx_usd-pair-midpoint":
+            return GdaxMidpointPriceFeed(
+                product_id="ZRX-USD", expiry=price_feed_expiry_argument
+            )
 
-        elif price_feed_argument == 'bat_usdc-pair-midpoint':
-            return GdaxMidpointPriceFeed(product_id="BAT-USDC",
-                                         expiry=price_feed_expiry_argument)
+        elif price_feed_argument == "bat_usdc-pair-midpoint":
+            return GdaxMidpointPriceFeed(
+                product_id="BAT-USDC", expiry=price_feed_expiry_argument
+            )
 
-        elif price_feed_argument == 'dai_usdc-pair-midpoint':
-            return GdaxMidpointPriceFeed(product_id="DAI-USDC",
-                                         expiry=price_feed_expiry_argument)
+        elif price_feed_argument == "dai_usdc-pair-midpoint":
+            return GdaxMidpointPriceFeed(
+                product_id="DAI-USDC", expiry=price_feed_expiry_argument
+            )
 
-        elif price_feed_argument == 'rep_usd-pair-midpoint':
-            return GdaxMidpointPriceFeed(product_id="REP-USD",
-                                         expiry=price_feed_expiry_argument)
+        elif price_feed_argument == "rep_usd-pair-midpoint":
+            return GdaxMidpointPriceFeed(
+                product_id="REP-USD", expiry=price_feed_expiry_argument
+            )
 
         elif price_feed_argument.startswith("fixed:"):
-            price_feed = FixedPriceFeed(
-                Wad.from_number(price_feed_argument[6:]))
+            price_feed = FixedPriceFeed(Wad.from_number(price_feed_argument[6:]))
 
-        elif price_feed_argument.startswith("ws://") or price_feed_argument.startswith("wss://"):
+        elif price_feed_argument.startswith("ws://") or price_feed_argument.startswith(
+            "wss://"
+        ):
             socket_feed = WebSocketFeed(price_feed_argument, 5)
             socket_feed = ExpiringFeed(socket_feed, price_feed_expiry_argument)
 

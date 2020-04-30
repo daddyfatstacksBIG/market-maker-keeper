@@ -54,15 +54,18 @@ class CEXKeeperAPI:
 
     def init_order_book_manager(self, arguments: Namespace, pyex_api: PyexAPI):
         self.order_book_manager = OrderBookManager(
-            refresh_frequency=self.arguments.refresh_frequency)
+            refresh_frequency=self.arguments.refresh_frequency
+        )
         self.order_book_manager.get_orders_with(
-            lambda: pyex_api.get_orders(self.pair()))
-        self.order_book_manager.get_balances_with(
-            lambda: pyex_api.get_balances())
+            lambda: pyex_api.get_orders(self.pair())
+        )
+        self.order_book_manager.get_balances_with(lambda: pyex_api.get_balances())
         self.order_book_manager.cancel_orders_with(
-            lambda order: pyex_api.cancel_order(order.order_id))
-        self.order_book_manager.enable_history_reporting(self.order_history_reporter, self.our_buy_orders,
-                                                         self.our_sell_orders)
+            lambda order: pyex_api.cancel_order(order.order_id)
+        )
+        self.order_book_manager.enable_history_reporting(
+            self.order_history_reporter, self.our_buy_orders, self.our_sell_orders
+        )
         self.order_book_manager.start()
 
     def main(self):
@@ -95,35 +98,41 @@ class CEXKeeperAPI:
         return list(filter(lambda order: not order.is_sell, our_orders))
 
     def synchronize_orders(self):
-        bands = Bands.read(self.bands_config, self.spread_feed,
-                           self.control_feed, self.history)
+        bands = Bands.read(
+            self.bands_config, self.spread_feed, self.control_feed, self.history
+        )
         order_book = self.order_book_manager.get_order_book()
         target_price = self.price_feed.get_price()
 
         # Cancel orders
-        cancellable_orders = bands.cancellable_orders(our_buy_orders=self.our_buy_orders(order_book.orders),
-                                                      our_sell_orders=self.our_sell_orders(
-                                                          order_book.orders),
-                                                      target_price=target_price)
+        cancellable_orders = bands.cancellable_orders(
+            our_buy_orders=self.our_buy_orders(order_book.orders),
+            our_sell_orders=self.our_sell_orders(order_book.orders),
+            target_price=target_price,
+        )
         if len(cancellable_orders) > 0:
             self.order_book_manager.cancel_orders(cancellable_orders)
             return
 
         # Do not place new orders if order book state is not confirmed
         if order_book.orders_being_placed or order_book.orders_being_cancelled:
-            self.logger.debug(
-                "Order book is in progress, not placing new orders")
+            self.logger.debug("Order book is in progress, not placing new orders")
             return
 
         # Place new orders
-        self.place_orders(bands.new_orders(our_buy_orders=self.our_buy_orders(order_book.orders),
-                                           our_sell_orders=self.our_sell_orders(
-                                               order_book.orders),
-                                           our_buy_balance=self.our_available_balance(order_book.balances,
-                                                                                      self.token_buy()),
-                                           our_sell_balance=self.our_available_balance(order_book.balances,
-                                                                                       self.token_sell()),
-                                           target_price=target_price)[0])
+        self.place_orders(
+            bands.new_orders(
+                our_buy_orders=self.our_buy_orders(order_book.orders),
+                our_sell_orders=self.our_sell_orders(order_book.orders),
+                our_buy_balance=self.our_available_balance(
+                    order_book.balances, self.token_buy()
+                ),
+                our_sell_balance=self.our_available_balance(
+                    order_book.balances, self.token_sell()
+                ),
+                target_price=target_price,
+            )[0]
+        )
 
     def place_orders(self, new_orders: list):
         raise NotImplementedError()
