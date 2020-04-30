@@ -14,12 +14,18 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 import argparse
 import logging
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import datetime
+from datetime import timezone
+
+from pyexchange.korbit import KorbitApi
+from pyexchange.korbit import Order
+from pymaker.lifecycle import Lifecycle
+from pymaker.numeric import Wad
+from retry import retry
 
 from market_maker_keeper.band import Bands
 from market_maker_keeper.control_feed import create_control_feed
@@ -31,10 +37,6 @@ from market_maker_keeper.price_feed import PriceFeedFactory
 from market_maker_keeper.reloadable_config import ReloadableConfig
 from market_maker_keeper.spread_feed import create_spread_feed
 from market_maker_keeper.util import setup_logging
-from pyexchange.korbit import KorbitApi, Order
-from pymaker.lifecycle import Lifecycle
-from pymaker.numeric import Wad
-from retry import retry
 
 
 class KorbitMarketMakerKeeper:

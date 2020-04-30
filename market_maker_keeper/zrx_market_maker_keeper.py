@@ -14,25 +14,14 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 import argparse
 import logging
 import sys
 import time
 from threading import Lock
 
-from market_maker_keeper.band import Bands, BuyBand, NewOrder
-from market_maker_keeper.control_feed import create_control_feed
-from market_maker_keeper.gas import GasPriceFactory
-from market_maker_keeper.limit import History
-from market_maker_keeper.order_book import OrderBookManager
-from market_maker_keeper.order_history_reporter import \
-    create_order_history_reporter
-from market_maker_keeper.price_feed import Price, PriceFeedFactory
-from market_maker_keeper.reloadable_config import ReloadableConfig
-from market_maker_keeper.spread_feed import create_spread_feed
-from market_maker_keeper.util import setup_logging
-from pyexchange.zrx import Pair, ZrxApi
+from pyexchange.zrx import Pair
+from pyexchange.zrx import ZrxApi
 from pymaker import Address
 from pymaker.approval import directly
 from pymaker.keys import register_keys
@@ -40,8 +29,25 @@ from pymaker.lifecycle import Lifecycle
 from pymaker.numeric import Wad
 from pymaker.token import ERC20Token
 from pymaker.util import eth_balance
-from pymaker.zrx import ZrxExchange, ZrxRelayerApi
-from web3 import HTTPProvider, Web3
+from pymaker.zrx import ZrxExchange
+from pymaker.zrx import ZrxRelayerApi
+from web3 import HTTPProvider
+from web3 import Web3
+
+from market_maker_keeper.band import Bands
+from market_maker_keeper.band import BuyBand
+from market_maker_keeper.band import NewOrder
+from market_maker_keeper.control_feed import create_control_feed
+from market_maker_keeper.gas import GasPriceFactory
+from market_maker_keeper.limit import History
+from market_maker_keeper.order_book import OrderBookManager
+from market_maker_keeper.order_history_reporter import \
+    create_order_history_reporter
+from market_maker_keeper.price_feed import Price
+from market_maker_keeper.price_feed import PriceFeedFactory
+from market_maker_keeper.reloadable_config import ReloadableConfig
+from market_maker_keeper.spread_feed import create_spread_feed
+from market_maker_keeper.util import setup_logging
 
 
 class ZrxMarketMakerKeeper:

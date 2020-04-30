@@ -14,14 +14,22 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 import argparse
 import logging
 import sys
 from math import log10
 from typing import List
 
-from market_maker_keeper.band import Bands, NewOrder
+from pyexchange.leverj import LeverjAPI
+from pyexchange.leverj import Order
+from pymaker.keys import register_keys
+from pymaker.lifecycle import Lifecycle
+from pymaker.numeric import Wad
+from web3 import HTTPProvider
+from web3 import Web3
+
+from market_maker_keeper.band import Bands
+from market_maker_keeper.band import NewOrder
 from market_maker_keeper.control_feed import create_control_feed
 from market_maker_keeper.limit import History
 from market_maker_keeper.order_book import OrderBookManager
@@ -31,11 +39,6 @@ from market_maker_keeper.price_feed import PriceFeedFactory
 from market_maker_keeper.reloadable_config import ReloadableConfig
 from market_maker_keeper.spread_feed import create_spread_feed
 from market_maker_keeper.util import setup_logging
-from pyexchange.leverj import LeverjAPI, Order
-from pymaker.keys import register_keys
-from pymaker.lifecycle import Lifecycle
-from pymaker.numeric import Wad
-from web3 import HTTPProvider, Web3
 
 
 class LeverjMarketMakerKeeper:

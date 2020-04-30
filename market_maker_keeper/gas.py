@@ -14,12 +14,13 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 from typing import Optional
 
 from ethgasstation_client import EthGasStation
-from pymaker.gas import (DefaultGasPrice, FixedGasPrice, GasPrice,
-                         IncreasingGasPrice)
+from pymaker.gas import DefaultGasPrice
+from pymaker.gas import FixedGasPrice
+from pymaker.gas import GasPrice
+from pymaker.gas import IncreasingGasPrice
 
 
 class SmartGasPrice(GasPrice):

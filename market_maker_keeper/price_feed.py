@@ -14,20 +14,24 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 import json
 import logging
 import threading
 import time
-from typing import List, Optional
+from typing import List
+from typing import Optional
 
 import websocket
-from gdax_client.price import GDAX_WS_URL, GdaxPriceClient
-from market_maker_keeper.feed import ExpiringFeed, Feed, WebSocketFeed
-from market_maker_keeper.setzer import Setzer
+from gdax_client.price import GDAX_WS_URL
+from gdax_client.price import GdaxPriceClient
 from pymaker.feed import DSValue
 from pymaker.numeric import Wad
 from pymaker.sai import Tub
+
+from market_maker_keeper.feed import ExpiringFeed
+from market_maker_keeper.feed import Feed
+from market_maker_keeper.feed import WebSocketFeed
+from market_maker_keeper.setzer import Setzer
 
 
 class Price(object):

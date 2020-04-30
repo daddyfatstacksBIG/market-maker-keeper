@@ -14,10 +14,23 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 import argparse
 import logging
 import sys
+
+from pyexchange.tethfinex import TEthfinexApi
+from pyexchange.tethfinex import TEthfinexToken
+from pymaker import Address
+from pymaker.keys import register_keys
+from pymaker.lifecycle import Lifecycle
+from pymaker.numeric import Wad
+from pymaker.sai import Tub
+from pymaker.token import ERC20Token
+from pymaker.util import eth_balance
+from pymaker.zrx import ZrxExchange
+from retry import retry
+from web3 import HTTPProvider
+from web3 import Web3
 
 from market_maker_keeper.band import Bands
 from market_maker_keeper.control_feed import create_control_feed
@@ -30,17 +43,6 @@ from market_maker_keeper.price_feed import PriceFeedFactory
 from market_maker_keeper.reloadable_config import ReloadableConfig
 from market_maker_keeper.spread_feed import create_spread_feed
 from market_maker_keeper.util import setup_logging
-from pyexchange.tethfinex import TEthfinexApi, TEthfinexToken
-from pymaker import Address
-from pymaker.keys import register_keys
-from pymaker.lifecycle import Lifecycle
-from pymaker.numeric import Wad
-from pymaker.sai import Tub
-from pymaker.token import ERC20Token
-from pymaker.util import eth_balance
-from pymaker.zrx import ZrxExchange
-from retry import retry
-from web3 import HTTPProvider, Web3
 
 
 class TethfinexMarketMakerKeeper:
