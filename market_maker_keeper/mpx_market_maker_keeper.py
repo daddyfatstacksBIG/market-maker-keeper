@@ -18,28 +18,29 @@
 import argparse
 import logging
 import sys
-from web3 import Web3, HTTPProvider
 
 from market_maker_keeper.band import Bands, NewOrder
 from market_maker_keeper.control_feed import create_control_feed
+from market_maker_keeper.gas import GasPriceFactory
 from market_maker_keeper.limit import History
 from market_maker_keeper.order_book import OrderBookManager
-from market_maker_keeper.order_history_reporter import create_order_history_reporter
+from market_maker_keeper.order_history_reporter import \
+    create_order_history_reporter
 from market_maker_keeper.price_feed import PriceFeedFactory
 from market_maker_keeper.reloadable_config import ReloadableConfig
 from market_maker_keeper.spread_feed import create_spread_feed
 from market_maker_keeper.util import setup_logging
-from market_maker_keeper.gas import GasPriceFactory
+from pyexchange.mpx import MpxApi, MpxPair, Order
+from pyexchange.zrxv2 import ZrxApiV2
+from pymaker import Address
+from pymaker.approval import directly
+from pymaker.keys import register_keys
 from pymaker.lifecycle import Lifecycle
 from pymaker.numeric import Wad
-from pyexchange.mpx import MpxApi, MpxPair, Order
-from pymaker.keys import register_keys
-from pymaker import Address
-from pymaker.zrxv2 import ZrxExchangeV2, ZrxRelayerApiV2
 from pymaker.token import ERC20Token
-from pymaker.approval import directly
-from pyexchange.zrxv2 import ZrxApiV2
 from pymaker.util import eth_balance
+from pymaker.zrxv2 import ZrxExchangeV2, ZrxRelayerApiV2
+from web3 import HTTPProvider, Web3
 
 
 class MpxMarketMakerKeeper:

@@ -18,14 +18,14 @@
 import argparse
 import logging
 import sys
-from retry import retry
 from datetime import datetime, timezone
 
 from market_maker_keeper.band import Bands
 from market_maker_keeper.control_feed import create_control_feed
 from market_maker_keeper.limit import History
 from market_maker_keeper.order_book import OrderBookManager
-from market_maker_keeper.order_history_reporter import create_order_history_reporter
+from market_maker_keeper.order_history_reporter import \
+    create_order_history_reporter
 from market_maker_keeper.price_feed import PriceFeedFactory
 from market_maker_keeper.reloadable_config import ReloadableConfig
 from market_maker_keeper.spread_feed import create_spread_feed
@@ -33,6 +33,7 @@ from market_maker_keeper.util import setup_logging
 from pyexchange.etoro import EToroApi, Order
 from pymaker.lifecycle import Lifecycle
 from pymaker.numeric import Wad
+from retry import retry
 
 
 class EToroMarketMakerKeeper:

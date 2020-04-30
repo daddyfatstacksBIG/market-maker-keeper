@@ -19,12 +19,11 @@ import json
 import logging
 import threading
 import time
-from typing import Optional, List
+from typing import List, Optional
 
 import websocket
-
-from gdax_client.price import GdaxPriceClient, GDAX_WS_URL
-from market_maker_keeper.feed import ExpiringFeed, WebSocketFeed, Feed
+from gdax_client.price import GDAX_WS_URL, GdaxPriceClient
+from market_maker_keeper.feed import ExpiringFeed, Feed, WebSocketFeed
 from market_maker_keeper.setzer import Setzer
 from pymaker.feed import DSValue
 from pymaker.numeric import Wad

@@ -21,11 +21,9 @@ import sys
 import time
 
 from eth_utils import from_wei
-
+from market_maker_keeper.cex_api import CEXKeeperAPI
 from pyexchange.dydx import DydxApi, Order
 from pymaker.numeric import Wad
-
-from market_maker_keeper.cex_api import CEXKeeperAPI
 
 
 class DyDxMarketMakerKeeper(CEXKeeperAPI):

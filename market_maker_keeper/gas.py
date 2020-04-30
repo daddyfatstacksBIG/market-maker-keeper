@@ -18,7 +18,8 @@
 from typing import Optional
 
 from ethgasstation_client import EthGasStation
-from pymaker.gas import GasPrice, IncreasingGasPrice, FixedGasPrice, DefaultGasPrice
+from pymaker.gas import (DefaultGasPrice, FixedGasPrice, GasPrice,
+                         IncreasingGasPrice)
 
 
 class SmartGasPrice(GasPrice):

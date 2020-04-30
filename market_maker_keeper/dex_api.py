@@ -16,24 +16,24 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from argparse import Namespace
-from web3 import Web3, HTTPProvider
 
 from market_maker_keeper.band import Bands
 from market_maker_keeper.control_feed import create_control_feed
 from market_maker_keeper.limit import History
 from market_maker_keeper.order_book import OrderBookManager
-from market_maker_keeper.order_history_reporter import create_order_history_reporter
+from market_maker_keeper.order_history_reporter import \
+    create_order_history_reporter
 from market_maker_keeper.price_feed import PriceFeedFactory
 from market_maker_keeper.reloadable_config import ReloadableConfig
 from market_maker_keeper.spread_feed import create_spread_feed
 from market_maker_keeper.util import setup_logging
-
+from pyexchange.api import PyexAPI
 from pymaker import Address
+from pymaker.keys import register_keys
 from pymaker.lifecycle import Lifecycle
 from pymaker.numeric import Wad
-from pyexchange.api import PyexAPI
 from pymaker.token import ERC20Token
-from pymaker.keys import register_keys
+from web3 import HTTPProvider, Web3
 
 
 class DEXKeeperAPI:
