@@ -114,7 +114,8 @@ class TethfinexMarketMakerKeeper:
         parser.add_argument("--smart-gas-price", dest='smart_gas_price', action='store_true',
                             help="Use smart gas pricing strategy, based on the ethgasstation.info feed")
 
-        parser.add_argument("--ethgasstation-api-key", type=str, default=None, help="ethgasstation API key")
+        parser.add_argument("--ethgasstation-api-key", type=str,
+                            default=None, help="ethgasstation API key")
 
         parser.add_argument("--refresh-frequency", type=int, default=3,
                             help="Order book refresh frequency (in seconds, default: 3)")
@@ -122,7 +123,8 @@ class TethfinexMarketMakerKeeper:
         parser.add_argument("--debug", dest='debug', action='store_true',
                             help="Enable debug output")
 
-        parser.set_defaults(cancel_on_shutdown=False, withdraw_on_shutdown=False)
+        parser.set_defaults(cancel_on_shutdown=False,
+                            withdraw_on_shutdown=False)
 
         self.arguments = parser.parse_args(args)
         setup_logging(self.arguments)
@@ -142,10 +144,12 @@ class TethfinexMarketMakerKeeper:
         self.gas_price = GasPriceFactory().create_gas_price(self.arguments)
         self.spread_feed = create_spread_feed(self.arguments)
         self.control_feed = create_control_feed(self.arguments)
-        self.order_history_reporter = create_order_history_reporter(self.arguments)
+        self.order_history_reporter = create_order_history_reporter(
+            self.arguments)
 
         self.history = History()
-        self.tethfinex_exchange = ZrxExchange(web3=self.web3, address=Address(self.arguments.exchange_address))
+        self.tethfinex_exchange = ZrxExchange(
+            web3=self.web3, address=Address(self.arguments.exchange_address))
         self.tethfinex_api = TEthfinexApi(self.tethfinex_exchange,
                                           self.arguments.tethfinex_api_server,
                                           timeout=self.arguments.tethfinex_timeout)
@@ -156,15 +160,21 @@ class TethfinexMarketMakerKeeper:
         token_registry = config['tokenRegistry']
         token_sell = self.token_sell()
         token_buy = self.token_buy()
-        self.token_sell_wrapper = TEthfinexToken(self.web3, Address(token_registry[token_sell]['wrapperAddress']), token_sell)
-        self.token_buy_wrapper = TEthfinexToken(self.web3, Address(token_registry[token_buy]['wrapperAddress']), token_buy)
+        self.token_sell_wrapper = TEthfinexToken(self.web3, Address(
+            token_registry[token_sell]['wrapperAddress']), token_sell)
+        self.token_buy_wrapper = TEthfinexToken(self.web3, Address(
+            token_registry[token_buy]['wrapperAddress']), token_buy)
 
-        pair=self.pair()
+        pair = self.pair()
 
-        self.order_book_manager = OrderBookManager(refresh_frequency=self.arguments.refresh_frequency, max_workers=1)
-        self.order_book_manager.get_orders_with(lambda: self.tethfinex_api.get_orders(pair))
-        self.order_book_manager.cancel_orders_with(lambda order: self.tethfinex_api.cancel_order(order.order_id))
-        self.order_book_manager.enable_history_reporting(self.order_history_reporter, self.our_buy_orders, self.our_sell_orders)
+        self.order_book_manager = OrderBookManager(
+            refresh_frequency=self.arguments.refresh_frequency, max_workers=1)
+        self.order_book_manager.get_orders_with(
+            lambda: self.tethfinex_api.get_orders(pair))
+        self.order_book_manager.cancel_orders_with(
+            lambda order: self.tethfinex_api.cancel_order(order.order_id))
+        self.order_book_manager.enable_history_reporting(
+            self.order_history_reporter, self.our_buy_orders, self.our_sell_orders)
         self.order_book_manager.start()
 
     def main(self):
@@ -198,13 +208,15 @@ class TethfinexMarketMakerKeeper:
         return list(filter(lambda order: not order.is_sell, our_orders))
 
     def synchronize_orders(self):
-        bands = Bands.read(self.bands_config, self.spread_feed, self.control_feed, self.history)
+        bands = Bands.read(self.bands_config, self.spread_feed,
+                           self.control_feed, self.history)
         order_book = self.order_book_manager.get_order_book()
         target_price = self.price_feed.get_price()
 
         # Cancel orders
         cancellable_orders = bands.cancellable_orders(our_buy_orders=self.our_buy_orders(order_book.orders),
-                                                      our_sell_orders=self.our_sell_orders(order_book.orders),
+                                                      our_sell_orders=self.our_sell_orders(
+                                                          order_book.orders),
                                                       target_price=target_price)
         if len(cancellable_orders) > 0:
             self.cancel_orders(cancellable_orders)
@@ -212,14 +224,18 @@ class TethfinexMarketMakerKeeper:
 
         # Do not place new orders if order book state is not confirmed
         if order_book.orders_being_placed or order_book.orders_being_cancelled:
-            self.logger.debug("Order book is in progress, not placing new orders")
+            self.logger.debug(
+                "Order book is in progress, not placing new orders")
             return
 
         # Evaluate if we need to create new orders, and how much do we need to deposit
         new_orders, missing_buy_amount, missing_sell_amount = bands.new_orders(our_buy_orders=self.our_buy_orders(order_book.orders),
-                                                                               our_sell_orders=self.our_sell_orders(order_book.orders),
-                                                                               our_buy_balance=self.our_available_balance(self.token_buy_wrapper),
-                                                                               our_sell_balance=self.our_available_balance(self.token_sell_wrapper),
+                                                                               our_sell_orders=self.our_sell_orders(
+                                                                                   order_book.orders),
+                                                                               our_buy_balance=self.our_available_balance(
+                                                                                   self.token_buy_wrapper),
+                                                                               our_sell_balance=self.our_available_balance(
+                                                                                   self.token_sell_wrapper),
                                                                                target_price=target_price)
 
         # If deposited amount too low for placing buy orders, try to deposit.
@@ -247,7 +263,8 @@ class TethfinexMarketMakerKeeper:
     def place_orders(self, new_orders):
         for new_order in new_orders:
             if new_order.is_sell:
-                self.logger.info(f"Sell amount {float(new_order.pay_amount)} of ETH with {float(new_order.buy_amount)} DAI")
+                self.logger.info(
+                    f"Sell amount {float(new_order.pay_amount)} of ETH with {float(new_order.buy_amount)} DAI")
                 self.tethfinex_api.place_order(True,
                                                pay_token=self.token_sell_wrapper.address,
                                                pay_amount=new_order.pay_amount,
@@ -256,7 +273,8 @@ class TethfinexMarketMakerKeeper:
                                                fee_address=self.fee_address,
                                                pair=self.pair())
             else:
-                self.logger.info(f"Buy amount {float(new_order.buy_amount)} of ETH with {float(new_order.pay_amount)} DAI")
+                self.logger.info(
+                    f"Buy amount {float(new_order.buy_amount)} of ETH with {float(new_order.pay_amount)} DAI")
                 self.tethfinex_api.place_order(False,
                                                pay_token=self.token_buy_wrapper.address,
                                                pay_amount=new_order.pay_amount,
@@ -273,7 +291,8 @@ class TethfinexMarketMakerKeeper:
 
         # If we still can deposit something, and it's at least `min_eth_deposit`, then we do deposit.
         if missing_sell_amount > Wad(0):
-            receipt = self.token_sell_wrapper.deposit(missing_sell_amount).transact(gas_price=self.gas_price)
+            receipt = self.token_sell_wrapper.deposit(
+                missing_sell_amount).transact(gas_price=self.gas_price)
             return receipt is not None and receipt.successful
         else:
             return False
@@ -286,7 +305,8 @@ class TethfinexMarketMakerKeeper:
 
         # If we still can deposit something, and it's at least `min_sai_deposit`, then we do deposit.
         if missing_buy_amount > Wad(0):
-            receipt = self.token_buy_wrapper.deposit(missing_buy_amount).transact(gas_price=self.gas_price)
+            receipt = self.token_buy_wrapper.deposit(
+                missing_buy_amount).transact(gas_price=self.gas_price)
             return receipt is not None and receipt.successful
         else:
             return False

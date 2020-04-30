@@ -111,13 +111,13 @@ class LeverjMarketMakerKeeper:
                             help="Enable debug output")
 
         self.arguments = parser.parse_args(args)
-    
+
         if "infura" in self.arguments.rpc_host:
             self.web3 = Web3(HTTPProvider(endpoint_uri=f"http://{self.arguments.rpc_host}",
-                                      request_kwargs={"timeout": self.arguments.rpc_timeout}))
+                                          request_kwargs={"timeout": self.arguments.rpc_timeout}))
         else:
             self.web3 = Web3(HTTPProvider(endpoint_uri=f"http://{self.arguments.rpc_host}:{self.arguments.rpc_port}",
-                                      request_kwargs={"timeout": self.arguments.rpc_timeout}))
+                                          request_kwargs={"timeout": self.arguments.rpc_timeout}))
 
         self.web3.eth.defaultAccount = self.arguments.eth_from
         register_keys(self.web3, self.arguments.eth_key)
@@ -128,7 +128,8 @@ class LeverjMarketMakerKeeper:
         self.price_feed = PriceFeedFactory().create_price_feed(self.arguments)
         self.spread_feed = create_spread_feed(self.arguments)
         self.control_feed = create_control_feed(self.arguments)
-        self.order_history_reporter = create_order_history_reporter(self.arguments)
+        self.order_history_reporter = create_order_history_reporter(
+            self.arguments)
 
         self.history = History()
 
@@ -139,11 +140,14 @@ class LeverjMarketMakerKeeper:
                                     api_secret=self.arguments.api_secret,
                                     timeout=self.arguments.leverj_timeout)
 
-
-        self.order_book_manager = OrderBookManager(refresh_frequency=self.arguments.refresh_frequency)
-        self.order_book_manager.get_orders_with(lambda: self.leverj_api.get_orders(self.pair()))
-        self.order_book_manager.get_balances_with(lambda: self.leverj_api.get_balances())
-        self.order_book_manager.cancel_orders_with(lambda order: self.leverj_api.cancel_order(order.order_id))
+        self.order_book_manager = OrderBookManager(
+            refresh_frequency=self.arguments.refresh_frequency)
+        self.order_book_manager.get_orders_with(
+            lambda: self.leverj_api.get_orders(self.pair()))
+        self.order_book_manager.get_balances_with(
+            lambda: self.leverj_api.get_balances())
+        self.order_book_manager.cancel_orders_with(
+            lambda order: self.leverj_api.cancel_order(order.order_id))
         self.order_book_manager.enable_history_reporting(self.order_history_reporter, self.our_buy_orders,
                                                          self.our_sell_orders)
         self.order_book_manager.start()
@@ -156,7 +160,8 @@ class LeverjMarketMakerKeeper:
             lifecycle.on_shutdown(self.shutdown)
 
     def startup(self):
-        quote_increment = 1/(self.leverj_api.get_product(self.arguments.pair)["ticksperpoint"])
+        quote_increment = 1 / \
+            (self.leverj_api.get_product(self.arguments.pair)["ticksperpoint"])
         self.precision = -(int(log10(float(quote_increment)))+1)
 
     def shutdown(self):
@@ -175,11 +180,10 @@ class LeverjMarketMakerKeeper:
             return self.arguments.pair[4:]
         return self.arguments.pair[3:]
 
-
     def our_available_balance(self, our_balances: dict, token: str) -> Wad:
         for key in our_balances:
             if our_balances[key]['symbol'] == token:
-                if (token == "LEV") or (token == "FEE"): 
+                if (token == "LEV") or (token == "FEE"):
                     return Wad(int(our_balances[key]['available'])*10**9)
                 elif (token == "USDC") or (token == "USDT"):
                     return Wad(int(our_balances[key]['available'])*10**12)
@@ -192,7 +196,6 @@ class LeverjMarketMakerKeeper:
 
         return Wad(0)
 
-
     def our_sell_orders(self, our_orders: list) -> list:
         return list(filter(lambda order: order.is_sell, our_orders))
 
@@ -200,13 +203,15 @@ class LeverjMarketMakerKeeper:
         return list(filter(lambda order: not order.is_sell, our_orders))
 
     def synchronize_orders(self):
-        bands = Bands.read(self.bands_config, self.spread_feed, self.control_feed, self.history)
+        bands = Bands.read(self.bands_config, self.spread_feed,
+                           self.control_feed, self.history)
 
         order_book = self.order_book_manager.get_order_book()
         target_price = self.price_feed.get_price()
         # Cancel orders
         cancellable_orders = bands.cancellable_orders(our_buy_orders=self.our_buy_orders(order_book.orders),
-                                                      our_sell_orders=self.our_sell_orders(order_book.orders),
+                                                      our_sell_orders=self.our_sell_orders(
+                                                          order_book.orders),
                                                       target_price=target_price)
         if len(cancellable_orders) > 0:
             self.order_book_manager.cancel_orders(cancellable_orders)
@@ -214,14 +219,18 @@ class LeverjMarketMakerKeeper:
 
         # Do not place new orders if order book state is not confirmed
         if order_book.orders_being_placed or order_book.orders_being_cancelled:
-            self.logger.debug("Order book is in progress, not placing new orders")
+            self.logger.debug(
+                "Order book is in progress, not placing new orders")
             return
 
         # Place new orders
         new_orders = bands.new_orders(our_buy_orders=self.our_buy_orders(order_book.orders),
-                                      our_sell_orders=self.our_sell_orders(order_book.orders),
-                                      our_buy_balance=self.our_available_balance(order_book.balances, self.token_buy()),
-                                      our_sell_balance=self.our_available_balance(order_book.balances, self.token_sell()),
+                                      our_sell_orders=self.our_sell_orders(
+                                          order_book.orders),
+                                      our_buy_balance=self.our_available_balance(
+                                          order_book.balances, self.token_buy()),
+                                      our_sell_balance=self.our_available_balance(
+                                          order_book.balances, self.token_sell()),
                                       target_price=target_price)[0]
         self.place_orders(new_orders)
 
@@ -229,7 +238,8 @@ class LeverjMarketMakerKeeper:
         def place_order_function(new_order_to_be_placed):
             price = round(new_order_to_be_placed.price, self.precision + 2)
             amount = new_order_to_be_placed.pay_amount if new_order_to_be_placed.is_sell else new_order_to_be_placed.buy_amount
-            order_id = str(self.leverj_api.place_order(self.pair(), new_order_to_be_placed.is_sell, price, amount))
+            order_id = str(self.leverj_api.place_order(
+                self.pair(), new_order_to_be_placed.is_sell, price, amount))
             return Order(order_id=order_id,
                          pair=self.pair(),
                          is_sell=new_order_to_be_placed.is_sell,
@@ -237,7 +247,8 @@ class LeverjMarketMakerKeeper:
                          amount=amount)
 
         for new_order in new_orders:
-            self.order_book_manager.place_order(lambda new_order=new_order: place_order_function(new_order))
+            self.order_book_manager.place_order(
+                lambda new_order=new_order: place_order_function(new_order))
 
 
 if __name__ == '__main__':

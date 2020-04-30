@@ -123,12 +123,14 @@ class IdexMarketMakerKeeper:
         parser.add_argument("--smart-gas-price", dest='smart_gas_price', action='store_true',
                             help="Use smart gas pricing strategy, based on the ethgasstation.info feed")
 
-        parser.add_argument("--ethgasstation-api-key", type=str, default=None, help="ethgasstation API key")
+        parser.add_argument("--ethgasstation-api-key", type=str,
+                            default=None, help="ethgasstation API key")
 
         parser.add_argument("--debug", dest='debug', action='store_true',
                             help="Enable debug output")
 
-        parser.set_defaults(cancel_on_shutdown=False, withdraw_on_shutdown=False)
+        parser.set_defaults(cancel_on_shutdown=False,
+                            withdraw_on_shutdown=False)
 
         self.arguments = parser.parse_args(args)
         setup_logging(self.arguments)
@@ -139,7 +141,8 @@ class IdexMarketMakerKeeper:
         self.our_address = Address(self.arguments.eth_from)
         register_keys(self.web3, self.arguments.eth_key)
 
-        self.tub = Tub(web3=self.web3, address=Address(self.arguments.tub_address))
+        self.tub = Tub(web3=self.web3, address=Address(
+            self.arguments.tub_address))
         self.sai = ERC20Token(web3=self.web3, address=self.tub.sai())
         self.gem = ERC20Token(web3=self.web3, address=self.tub.gem())
 
@@ -152,14 +155,17 @@ class IdexMarketMakerKeeper:
         self.price_feed = PriceFeedFactory().create_price_feed(self.arguments, self.tub)
         self.spread_feed = create_spread_feed(self.arguments)
         self.control_feed = create_control_feed(self.arguments)
-        self.order_history_reporter = create_order_history_reporter(self.arguments)
+        self.order_history_reporter = create_order_history_reporter(
+            self.arguments)
 
         if self.eth_reserve <= self.min_eth_balance:
-            raise Exception("--eth-reserve must be higher than --min-eth-balance")
+            raise Exception(
+                "--eth-reserve must be higher than --min-eth-balance")
 
         self.history = History()
         self.idex = IDEX(self.web3, Address(self.arguments.idex_address))
-        self.idex_api = IDEXApi(self.idex, self.arguments.idex_api_server, self.arguments.idex_timeout)
+        self.idex_api = IDEXApi(
+            self.idex, self.arguments.idex_api_server, self.arguments.idex_timeout)
 
     def main(self):
         with Lifecycle(self.web3) as lifecycle:
@@ -176,8 +182,10 @@ class IdexMarketMakerKeeper:
         self.cancel_all_orders()
 
     def approve(self):
-        token_addresses = filter(lambda address: address != IDEX.ETH_TOKEN, [self.token_sell(), self.token_buy()])
-        tokens = list(map(lambda address: ERC20Token(web3=self.web3, address=address), token_addresses))
+        token_addresses = filter(lambda address: address != IDEX.ETH_TOKEN, [
+                                 self.token_sell(), self.token_buy()])
+        tokens = list(map(lambda address: ERC20Token(
+            web3=self.web3, address=address), token_addresses))
 
         self.idex.approve(tokens, directly(gas_price=self.gas_price))
 
@@ -223,19 +231,22 @@ class IdexMarketMakerKeeper:
         # the keeper, keep processing blocks as the moment the keeper gets a top-up it should
         # resume activity straight away, without the need to restart it.
         if eth_balance(self.web3, self.our_address) < self.min_eth_balance:
-            self.logger.warning(f"Keeper ETH balance below minimum, cancelling all orders.")
+            self.logger.warning(
+                f"Keeper ETH balance below minimum, cancelling all orders.")
             self.cancel_all_orders()
 
             return
 
-        bands = Bands.read(self.bands_config, self.spread_feed, self.control_feed, self.history)
+        bands = Bands.read(self.bands_config, self.spread_feed,
+                           self.control_feed, self.history)
         our_balances = self.our_balances()
         our_orders = self.our_orders()
         target_price = self.price_feed.get_price()
 
         # Cancel orders
         cancellable_orders = bands.cancellable_orders(our_buy_orders=self.our_buy_orders(our_orders),
-                                                      our_sell_orders=self.our_sell_orders(our_orders),
+                                                      our_sell_orders=self.our_sell_orders(
+                                                          our_orders),
                                                       target_price=target_price)
         if len(cancellable_orders) > 0:
             self.cancel_orders(cancellable_orders)
@@ -247,14 +258,18 @@ class IdexMarketMakerKeeper:
         # we also do not create any new orders, but at the same time existing orders
         # can still be cancelled.
         if not self.balances_match(our_balances):
-            self.logger.info("Balances do not match, probably deposits are in progress, waiting.")
+            self.logger.info(
+                "Balances do not match, probably deposits are in progress, waiting.")
             return
 
         # Evaluate if we need to create new orders, and how much do we need to deposit
         new_orders, missing_buy_amount, missing_sell_amount = bands.new_orders(our_buy_orders=self.our_buy_orders(our_orders),
-                                                                               our_sell_orders=self.our_sell_orders(our_orders),
-                                                                               our_buy_balance=self.our_available_balance(our_balances, self.token_buy()),
-                                                                               our_sell_balance=self.our_available_balance(our_balances, self.token_sell()),
+                                                                               our_sell_orders=self.our_sell_orders(
+                                                                                   our_orders),
+                                                                               our_buy_balance=self.our_available_balance(
+                                                                                   our_balances, self.token_buy()),
+                                                                               our_sell_balance=self.our_available_balance(
+                                                                                   our_balances, self.token_sell()),
                                                                                target_price=target_price)
 
         # If deposited amount too low for placing buy orders, try to deposit.
@@ -302,12 +317,14 @@ class IdexMarketMakerKeeper:
             missing_sell_amount = self.min_eth_deposit
 
         # We can never deposit more than our available ETH balance minus `eth_reserve` (reserve for gas).
-        depositable_eth = Wad.max(eth_balance(self.web3, self.our_address) - self.eth_reserve, Wad(0))
+        depositable_eth = Wad.max(eth_balance(
+            self.web3, self.our_address) - self.eth_reserve, Wad(0))
         missing_sell_amount = Wad.min(missing_sell_amount, depositable_eth)
 
         # If we still can deposit something, and it's at least `min_eth_deposit`, then we do deposit.
         if missing_sell_amount > Wad(0) and missing_sell_amount >= self.min_eth_deposit:
-            receipt = self.idex.deposit(missing_sell_amount).transact(gas_price=self.gas_price)
+            receipt = self.idex.deposit(missing_sell_amount).transact(
+                gas_price=self.gas_price)
             return receipt is not None and receipt.successful
         else:
             return False
@@ -324,7 +341,8 @@ class IdexMarketMakerKeeper:
 
         # If we still can deposit something, and it's at least `min_sai_deposit`, then we do deposit.
         if missing_buy_amount > Wad(0) and missing_buy_amount >= self.min_sai_deposit:
-            receipt = self.idex.deposit_token(self.sai.address, missing_buy_amount).transact(gas_price=self.gas_price)
+            receipt = self.idex.deposit_token(
+                self.sai.address, missing_buy_amount).transact(gas_price=self.gas_price)
             return receipt is not None and receipt.successful
         else:
             return False
@@ -351,7 +369,8 @@ class IdexMarketMakerKeeper:
             dai_on_orders = Wad(0)
 
         return self.idex.balance_of(self.our_address) == eth_available + eth_on_orders and \
-               self.idex.balance_of_token(self.sai.address, self.our_address) == dai_available + dai_on_orders
+            self.idex.balance_of_token(
+                self.sai.address, self.our_address) == dai_available + dai_on_orders
 
 
 if __name__ == '__main__':

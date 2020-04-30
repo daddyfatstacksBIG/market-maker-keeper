@@ -118,7 +118,8 @@ class TheOceanMarketMakerKeeper:
         parser.add_argument("--smart-gas-price", dest='smart_gas_price', action='store_true',
                             help="Use smart gas pricing strategy, based on the ethgasstation.info feed")
 
-        parser.add_argument("--ethgasstation-api-key", type=str, default=None, help="ethgasstation API key")
+        parser.add_argument("--ethgasstation-api-key", type=str,
+                            default=None, help="ethgasstation API key")
 
         parser.add_argument("--refresh-frequency", type=int, default=3,
                             help="Order book refresh frequency (in seconds, default: 3)")
@@ -135,8 +136,10 @@ class TheOceanMarketMakerKeeper:
         self.our_address = Address(self.arguments.eth_from)
         register_keys(self.web3, self.arguments.eth_key)
 
-        self.token_buy = ERC20Token(web3=self.web3, address=Address(self.arguments.buy_token_address))
-        self.token_sell = ERC20Token(web3=self.web3, address=Address(self.arguments.sell_token_address))
+        self.token_buy = ERC20Token(
+            web3=self.web3, address=Address(self.arguments.buy_token_address))
+        self.token_sell = ERC20Token(
+            web3=self.web3, address=Address(self.arguments.sell_token_address))
         self.pair = Pair(self.token_sell.address, self.token_buy.address)
         self.bands_config = ReloadableConfig(self.arguments.config)
         self.price_max_decimals = None
@@ -144,22 +147,28 @@ class TheOceanMarketMakerKeeper:
         self.price_feed = PriceFeedFactory().create_price_feed(self.arguments)
         self.spread_feed = create_spread_feed(self.arguments)
         self.control_feed = create_control_feed(self.arguments)
-        self.order_history_reporter = create_order_history_reporter(self.arguments)
+        self.order_history_reporter = create_order_history_reporter(
+            self.arguments)
 
         self.history = History()
-        self.zrx_exchange = ZrxExchangeV2(web3=self.web3, address=Address(self.arguments.exchange_address))
+        self.zrx_exchange = ZrxExchangeV2(
+            web3=self.web3, address=Address(self.arguments.exchange_address))
         self.theocean_api = TheOceanApi(self.zrx_exchange,
                                         self.arguments.theocean_api_server,
                                         self.arguments.theocean_api_key,
                                         self.arguments.theocean_api_secret,
                                         self.arguments.theocean_api_timeout)
 
-        self.order_book_manager = OrderBookManager(refresh_frequency=self.arguments.refresh_frequency)
-        self.order_book_manager.get_orders_with(lambda: self.theocean_api.get_orders(self.pair))
+        self.order_book_manager = OrderBookManager(
+            refresh_frequency=self.arguments.refresh_frequency)
+        self.order_book_manager.get_orders_with(
+            lambda: self.theocean_api.get_orders(self.pair))
         self.order_book_manager.get_balances_with(lambda: self.get_balances())
         self.order_book_manager.place_orders_with(self.place_order_function)
-        self.order_book_manager.cancel_orders_with(lambda order: self.theocean_api.cancel_order(order.order_id))
-        self.order_book_manager.enable_history_reporting(self.order_history_reporter, self.our_buy_orders, self.our_sell_orders)
+        self.order_book_manager.cancel_orders_with(
+            lambda order: self.theocean_api.cancel_order(order.order_id))
+        self.order_book_manager.enable_history_reporting(
+            self.order_history_reporter, self.our_buy_orders, self.our_sell_orders)
         self.order_book_manager.start()
 
     def main(self):
@@ -177,7 +186,8 @@ class TheOceanMarketMakerKeeper:
 
         assert(int(market['baseToken']['decimals']) == 18)
         assert(int(market['quoteToken']['decimals']) == 18)
-        assert(int(market['baseToken']['precision']) == int(market['quoteToken']['precision']))
+        assert(int(market['baseToken']['precision']) ==
+               int(market['quoteToken']['precision']))
 
         self.price_max_decimals = 0 - int(market['baseToken']['precision'])
 
@@ -187,7 +197,8 @@ class TheOceanMarketMakerKeeper:
         self.order_book_manager.cancel_all_orders()
 
     def approve(self):
-        self.zrx_exchange.approve([self.token_sell, self.token_buy], directly(gas_price=self.gas_price))
+        self.zrx_exchange.approve(
+            [self.token_sell, self.token_buy], directly(gas_price=self.gas_price))
 
     def get_balances(self):
         return self.theocean_api.get_balance(self.pair.sell_token), self.theocean_api.get_balance(self.pair.buy_token)
@@ -205,13 +216,15 @@ class TheOceanMarketMakerKeeper:
         return list(filter(lambda order: not order.is_sell, our_orders))
 
     def synchronize_orders(self):
-        bands = Bands.read(self.bands_config, self.spread_feed, self.control_feed, self.history)
+        bands = Bands.read(self.bands_config, self.spread_feed,
+                           self.control_feed, self.history)
         order_book = self.order_book_manager.get_order_book()
         target_price = self.price_feed.get_price()
 
         # Cancel orders
         cancellable_orders = bands.cancellable_orders(our_buy_orders=self.our_buy_orders(order_book.orders),
-                                                      our_sell_orders=self.our_sell_orders(order_book.orders),
+                                                      our_sell_orders=self.our_sell_orders(
+                                                          order_book.orders),
                                                       target_price=target_price)
         if len(cancellable_orders) > 0:
             self.order_book_manager.cancel_orders(cancellable_orders)
@@ -219,14 +232,18 @@ class TheOceanMarketMakerKeeper:
 
         # Do not place new orders if order book state is not confirmed
         if order_book.orders_being_placed or order_book.orders_being_cancelled:
-            self.logger.debug("Order book is in progress, not placing new orders")
+            self.logger.debug(
+                "Order book is in progress, not placing new orders")
             return
 
         # Place new orders
         self.order_book_manager.place_orders(bands.new_orders(our_buy_orders=self.our_buy_orders(order_book.orders),
-                                                              our_sell_orders=self.our_sell_orders(order_book.orders),
-                                                              our_buy_balance=self.our_buy_balance(order_book.balances),
-                                                              our_sell_balance=self.our_sell_balance(order_book.balances),
+                                                              our_sell_orders=self.our_sell_orders(
+                                                                  order_book.orders),
+                                                              our_buy_balance=self.our_buy_balance(
+                                                                  order_book.balances),
+                                                              our_sell_balance=self.our_sell_balance(
+                                                                  order_book.balances),
                                                               target_price=target_price)[0])
 
     def place_order_function(self, new_order: NewOrder):
@@ -237,7 +254,8 @@ class TheOceanMarketMakerKeeper:
         price = round(new_order.price, self.price_max_decimals)
         amount = new_order.pay_amount if new_order.is_sell else new_order.buy_amount
 
-        new_order_id = self.theocean_api.place_order(pair=pair, is_sell=is_sell, price=price, amount=amount)
+        new_order_id = self.theocean_api.place_order(
+            pair=pair, is_sell=is_sell, price=price, amount=amount)
 
         if new_order_id is not None:
             return Order(order_id=new_order_id,

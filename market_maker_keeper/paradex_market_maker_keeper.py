@@ -123,7 +123,8 @@ class ParadexMarketMakerKeeper:
         parser.add_argument("--smart-gas-price", dest='smart_gas_price', action='store_true',
                             help="Use smart gas pricing strategy, based on the ethgasstation.info feed")
 
-        parser.add_argument("--ethgasstation-api-key", type=str, default=None, help="ethgasstation API key")
+        parser.add_argument("--ethgasstation-api-key", type=str,
+                            default=None, help="ethgasstation API key")
 
         parser.add_argument("--refresh-frequency", type=int, default=3,
                             help="Order book refresh frequency (in seconds, default: 3)")
@@ -141,8 +142,10 @@ class ParadexMarketMakerKeeper:
         register_keys(self.web3, self.arguments.eth_key)
 
         self.pair = self.arguments.pair.upper()
-        self.token_buy = ERC20Token(web3=self.web3, address=Address(self.arguments.buy_token_address))
-        self.token_sell = ERC20Token(web3=self.web3, address=Address(self.arguments.sell_token_address))
+        self.token_buy = ERC20Token(
+            web3=self.web3, address=Address(self.arguments.buy_token_address))
+        self.token_sell = ERC20Token(
+            web3=self.web3, address=Address(self.arguments.sell_token_address))
         self.bands_config = ReloadableConfig(self.arguments.config)
         self.price_max_decimals = None
         self.amount_max_decimals = None
@@ -150,20 +153,26 @@ class ParadexMarketMakerKeeper:
         self.price_feed = PriceFeedFactory().create_price_feed(self.arguments)
         self.spread_feed = create_spread_feed(self.arguments)
         self.control_feed = create_control_feed(self.arguments)
-        self.order_history_reporter = create_order_history_reporter(self.arguments)
+        self.order_history_reporter = create_order_history_reporter(
+            self.arguments)
 
         self.history = History()
-        self.zrx_exchange = ZrxExchangeV2(web3=self.web3, address=Address(self.arguments.exchange_address))
+        self.zrx_exchange = ZrxExchangeV2(
+            web3=self.web3, address=Address(self.arguments.exchange_address))
         self.paradex_api = ParadexApi(self.zrx_exchange,
                                       self.arguments.paradex_api_server,
                                       self.arguments.paradex_api_key,
                                       self.arguments.paradex_api_timeout)
 
-        self.order_book_manager = OrderBookManager(refresh_frequency=self.arguments.refresh_frequency, max_workers=1)
-        self.order_book_manager.get_orders_with(lambda: self.paradex_api.get_orders(self.pair))
+        self.order_book_manager = OrderBookManager(
+            refresh_frequency=self.arguments.refresh_frequency, max_workers=1)
+        self.order_book_manager.get_orders_with(
+            lambda: self.paradex_api.get_orders(self.pair))
         self.order_book_manager.get_balances_with(lambda: self.get_balances())
-        self.order_book_manager.cancel_orders_with(lambda order: self.paradex_api.cancel_order(order.order_id))
-        self.order_book_manager.enable_history_reporting(self.order_history_reporter, self.our_buy_orders, self.our_sell_orders)
+        self.order_book_manager.cancel_orders_with(
+            lambda order: self.paradex_api.cancel_order(order.order_id))
+        self.order_book_manager.enable_history_reporting(
+            self.order_history_reporter, self.our_buy_orders, self.our_sell_orders)
         self.order_book_manager.start()
 
     def main(self):
@@ -179,7 +188,8 @@ class ParadexMarketMakerKeeper:
         # Get maximum number of decimals for prices and amounts.
         # Paradex API enforces it.
         markets = self.paradex_api.get_markets()
-        market = next(filter(lambda item: item['symbol'] == self.pair, markets))
+        market = next(
+            filter(lambda item: item['symbol'] == self.pair, markets))
 
         self.price_max_decimals = market['priceMaxDecimals']
         self.amount_max_decimals = market['amountMaxDecimals']
@@ -188,7 +198,8 @@ class ParadexMarketMakerKeeper:
         self.order_book_manager.cancel_all_orders()
 
     def approve(self):
-        self.zrx_exchange.approve([self.token_sell, self.token_buy], directly(gas_price=self.gas_price))
+        self.zrx_exchange.approve(
+            [self.token_sell, self.token_buy], directly(gas_price=self.gas_price))
 
     def get_balances(self):
         return self.token_sell.balance_of(self.our_address), self.token_buy.balance_of(self.our_address)
@@ -206,13 +217,15 @@ class ParadexMarketMakerKeeper:
         return list(filter(lambda order: not order.is_sell, our_orders))
 
     def synchronize_orders(self):
-        bands = Bands.read(self.bands_config, self.spread_feed, self.control_feed, self.history)
+        bands = Bands.read(self.bands_config, self.spread_feed,
+                           self.control_feed, self.history)
         order_book = self.order_book_manager.get_order_book()
         target_price = self.price_feed.get_price()
 
         # Cancel orders
         cancellable_orders = bands.cancellable_orders(our_buy_orders=self.our_buy_orders(order_book.orders),
-                                                      our_sell_orders=self.our_sell_orders(order_book.orders),
+                                                      our_sell_orders=self.our_sell_orders(
+                                                          order_book.orders),
                                                       target_price=target_price)
         if len(cancellable_orders) > 0:
             self.order_book_manager.cancel_orders(cancellable_orders)
@@ -220,24 +233,29 @@ class ParadexMarketMakerKeeper:
 
         # Do not place new orders if order book state is not confirmed
         if order_book.orders_being_placed or order_book.orders_being_cancelled:
-            self.logger.debug("Order book is in progress, not placing new orders")
+            self.logger.debug(
+                "Order book is in progress, not placing new orders")
             return
 
         # In case of Paradex, balances returned by `our_total_balance` still contain amounts "locked"
         # by currently open orders, so we need to explicitly subtract these amounts.
-        our_buy_balance = self.our_total_buy_balance(order_book.balances) - Bands.total_amount(self.our_buy_orders(order_book.orders))
-        our_sell_balance = self.our_total_sell_balance(order_book.balances) - Bands.total_amount(self.our_sell_orders(order_book.orders))
+        our_buy_balance = self.our_total_buy_balance(
+            order_book.balances) - Bands.total_amount(self.our_buy_orders(order_book.orders))
+        our_sell_balance = self.our_total_sell_balance(
+            order_book.balances) - Bands.total_amount(self.our_sell_orders(order_book.orders))
 
         # Place new orders
         self.place_orders(bands.new_orders(our_buy_orders=self.our_buy_orders(order_book.orders),
-                                           our_sell_orders=self.our_sell_orders(order_book.orders),
+                                           our_sell_orders=self.our_sell_orders(
+                                               order_book.orders),
                                            our_buy_balance=our_buy_balance,
                                            our_sell_balance=our_sell_balance,
                                            target_price=target_price)[0])
 
     def place_orders(self, new_orders):
         def place_order_function(new_order_to_be_placed):
-            price = round(new_order_to_be_placed.price, self.price_max_decimals)
+            price = round(new_order_to_be_placed.price,
+                          self.price_max_decimals)
             amount = new_order_to_be_placed.pay_amount if new_order_to_be_placed.is_sell else new_order_to_be_placed.buy_amount
             amount = round(amount, self.amount_max_decimals)
             order_id = self.paradex_api.place_order(pair=self.pair,
@@ -249,7 +267,8 @@ class ParadexMarketMakerKeeper:
             return Order(order_id, self.pair, new_order_to_be_placed.is_sell, price, amount, amount)
 
         for new_order in new_orders:
-            self.order_book_manager.place_order(lambda new_order=new_order: place_order_function(new_order))
+            self.order_book_manager.place_order(
+                lambda new_order=new_order: place_order_function(new_order))
 
 
 if __name__ == '__main__':

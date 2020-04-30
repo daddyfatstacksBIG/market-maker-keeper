@@ -92,7 +92,8 @@ class MpxMarketMakerKeeper:
         parser.add_argument("--smart-gas-price", dest='smart_gas_price', action='store_true',
                             help="Use smart gas pricing strategy, based on the ethgasstation.info feed")
 
-        parser.add_argument("--ethgasstation-api-key", type=str, default=None, help="ethgasstation API key")
+        parser.add_argument("--ethgasstation-api-key", type=str,
+                            default=None, help="ethgasstation API key")
 
         parser.add_argument("--config", type=str, required=True,
                             help="Bands configuration file")
@@ -136,8 +137,10 @@ class MpxMarketMakerKeeper:
         self.our_address = Address(self.arguments.eth_from)
         register_keys(self.web3, self.arguments.eth_key)
 
-        self.token_buy = ERC20Token(web3=self.web3, address=Address(self.arguments.buy_token_address))
-        self.token_sell = ERC20Token(web3=self.web3, address=Address(self.arguments.sell_token_address))
+        self.token_buy = ERC20Token(
+            web3=self.web3, address=Address(self.arguments.buy_token_address))
+        self.token_sell = ERC20Token(
+            web3=self.web3, address=Address(self.arguments.sell_token_address))
 
         self.bands_config = ReloadableConfig(self.arguments.config)
         self.price_max_decimals = None
@@ -145,33 +148,42 @@ class MpxMarketMakerKeeper:
         self.price_feed = PriceFeedFactory().create_price_feed(self.arguments)
         self.spread_feed = create_spread_feed(self.arguments)
         self.control_feed = create_control_feed(self.arguments)
-        self.order_history_reporter = create_order_history_reporter(self.arguments)
+        self.order_history_reporter = create_order_history_reporter(
+            self.arguments)
 
         self.history = History()
 
-        self.zrx_exchange = ZrxExchangeV2(web3=self.web3, address=Address(self.arguments.exchange_address))
+        self.zrx_exchange = ZrxExchangeV2(
+            web3=self.web3, address=Address(self.arguments.exchange_address))
         self.mpx_api = MpxApi(api_server=self.arguments.mpx_api_server,
                               zrx_exchange=self.zrx_exchange,
-                              fee_recipient=Address(self.arguments.fee_address),
+                              fee_recipient=Address(
+                                  self.arguments.fee_address),
                               timeout=self.arguments.mpx_api_timeout,
                               our_address=self.arguments.eth_from)
 
-        self.zrx_relayer_api = ZrxRelayerApiV2(exchange=self.zrx_exchange, api_server=self.arguments.mpx_api_server)
-        self.zrx_api = ZrxApiV2(zrx_exchange=self.zrx_exchange, zrx_api=self.zrx_relayer_api)
+        self.zrx_relayer_api = ZrxRelayerApiV2(
+            exchange=self.zrx_exchange, api_server=self.arguments.mpx_api_server)
+        self.zrx_api = ZrxApiV2(
+            zrx_exchange=self.zrx_exchange, zrx_api=self.zrx_relayer_api)
 
         markets = self.mpx_api.get_markets()['data']
-        market = next(filter(lambda item: item['attributes']['pair-name'] == self.arguments.pair, markets))
+        market = next(filter(
+            lambda item: item['attributes']['pair-name'] == self.arguments.pair, markets))
 
         self.pair = MpxPair(self.arguments.pair,
-                            self.token_buy.address, int(market['attributes']['base-token-decimals']),
+                            self.token_buy.address, int(
+                                market['attributes']['base-token-decimals']),
                             self.token_sell.address, int(market['attributes']['quote-token-decimals']))
 
-        self.order_book_manager = OrderBookManager(refresh_frequency=self.arguments.refresh_frequency)
+        self.order_book_manager = OrderBookManager(
+            refresh_frequency=self.arguments.refresh_frequency)
         self.order_book_manager.get_orders_with(lambda: self.get_orders())
         self.order_book_manager.get_balances_with(lambda: self.get_balances())
         self.order_book_manager.cancel_orders_with(self.cancel_order_function)
         self.order_book_manager.place_orders_with(self.place_order_function)
-        self.order_book_manager.enable_history_reporting(self.order_history_reporter, self.our_buy_orders, self.our_sell_orders)
+        self.order_book_manager.enable_history_reporting(
+            self.order_history_reporter, self.our_buy_orders, self.our_sell_orders)
         self.order_book_manager.start()
 
     def main(self):
@@ -185,7 +197,8 @@ class MpxMarketMakerKeeper:
         self.approve()
 
     def approve(self):
-        self.zrx_exchange.approve([self.token_sell, self.token_buy], directly(gas_price=self.gas_price))
+        self.zrx_exchange.approve(
+            [self.token_sell, self.token_buy], directly(gas_price=self.gas_price))
 
     def shutdown(self):
         self.order_book_manager.cancel_all_orders()
@@ -208,13 +221,15 @@ class MpxMarketMakerKeeper:
         return list(filter(lambda order: not order.is_sell, our_orders))
 
     def synchronize_orders(self):
-        bands = Bands.read(self.bands_config, self.spread_feed, self.control_feed, self.history)
+        bands = Bands.read(self.bands_config, self.spread_feed,
+                           self.control_feed, self.history)
         order_book = self.order_book_manager.get_order_book()
         target_price = self.price_feed.get_price()
 
         # Cancel orders
         cancellable_orders = bands.cancellable_orders(our_buy_orders=self.our_buy_orders(order_book.orders),
-                                                      our_sell_orders=self.our_sell_orders(order_book.orders),
+                                                      our_sell_orders=self.our_sell_orders(
+                                                          order_book.orders),
                                                       target_price=target_price)
         if len(cancellable_orders) > 0:
             self.order_book_manager.cancel_orders(cancellable_orders)
@@ -222,17 +237,21 @@ class MpxMarketMakerKeeper:
 
         # Do not place new orders if order book state is not confirmed
         if order_book.orders_being_placed or order_book.orders_being_cancelled:
-            self.logger.debug("Order book is in progress, not placing new orders")
+            self.logger.debug(
+                "Order book is in progress, not placing new orders")
             return
 
         # In case of MPX, balances returned by `our_total_balance` still contain amounts "locked"
         # by currently open orders, so we need to explicitly subtract these amounts.
-        our_buy_balance = self.our_total_balance(self.token_buy) - Bands.total_amount(self.our_buy_orders(order_book.orders))
-        our_sell_balance = self.our_total_balance(self.token_sell) - Bands.total_amount(self.our_sell_orders(order_book.orders))
+        our_buy_balance = self.our_total_balance(
+            self.token_buy) - Bands.total_amount(self.our_buy_orders(order_book.orders))
+        our_sell_balance = self.our_total_balance(
+            self.token_sell) - Bands.total_amount(self.our_sell_orders(order_book.orders))
 
         # Place new orders
         self.order_book_manager.place_orders(bands.new_orders(our_buy_orders=self.our_buy_orders(order_book.orders),
-                                                              our_sell_orders=self.our_sell_orders(order_book.orders),
+                                                              our_sell_orders=self.our_sell_orders(
+                                                                  order_book.orders),
                                                               our_buy_balance=our_buy_balance,
                                                               our_sell_balance=our_sell_balance,
                                                               target_price=target_price)[0])
@@ -255,7 +274,8 @@ class MpxMarketMakerKeeper:
     def cancel_order_function(self, order):
         self.logger.info(f"Canceling order {order.zrx_order.order_hash}")
         if self.mpx_api.cancel_order(order.zrx_order.order_hash):
-            transact = self.zrx_exchange.cancel_order(order.zrx_order).transact(gas_price=self.gas_price)
+            transact = self.zrx_exchange.cancel_order(
+                order.zrx_order).transact(gas_price=self.gas_price)
             return transact is not None and transact.successful
 
         return False
