@@ -62,9 +62,10 @@ class EtherDeltaMarketMakerKeeper:
             help="JSON-RPC host (default: `localhost')",
         )
 
-        parser.add_argument(
-            "--rpc-port", type=int, default=8545, help="JSON-RPC port (default: `8545')"
-        )
+        parser.add_argument("--rpc-port",
+                            type=int,
+                            default=8545,
+                            help="JSON-RPC port (default: `8545')")
 
         parser.add_argument(
             "--rpc-timeout",
@@ -84,7 +85,8 @@ class EtherDeltaMarketMakerKeeper:
             "--eth-key",
             type=str,
             nargs="*",
-            help="Ethereum private key(s) to use (e.g. 'key_file=aaa.json,pass_file=aaa.pass')",
+            help=
+            "Ethereum private key(s) to use (e.g. 'key_file=aaa.json,pass_file=aaa.pass')",
         )
 
         parser.add_argument(
@@ -112,14 +114,16 @@ class EtherDeltaMarketMakerKeeper:
             "--etherdelta-number-of-attempts",
             type=int,
             default=3,
-            help="Number of attempts of running the tool to talk to the EtherDelta API socket",
+            help=
+            "Number of attempts of running the tool to talk to the EtherDelta API socket",
         )
 
         parser.add_argument(
             "--etherdelta-retry-interval",
             type=int,
             default=10,
-            help="Retry interval for sending orders over the EtherDelta API socket",
+            help=
+            "Retry interval for sending orders over the EtherDelta API socket",
         )
 
         parser.add_argument(
@@ -129,13 +133,15 @@ class EtherDeltaMarketMakerKeeper:
             help="Timeout for sending orders over the EtherDelta API socket",
         )
 
-        parser.add_argument(
-            "--config", type=str, required=True, help="Bands configuration file"
-        )
+        parser.add_argument("--config",
+                            type=str,
+                            required=True,
+                            help="Bands configuration file")
 
-        parser.add_argument(
-            "--price-feed", type=str, required=True, help="Source of price feed"
-        )
+        parser.add_argument("--price-feed",
+                            type=str,
+                            required=True,
+                            help="Source of price feed")
 
         parser.add_argument(
             "--price-feed-expiry",
@@ -144,7 +150,9 @@ class EtherDeltaMarketMakerKeeper:
             help="Maximum age of the price feed (in seconds, default: 120)",
         )
 
-        parser.add_argument("--spread-feed", type=str, help="Source of spread feed")
+        parser.add_argument("--spread-feed",
+                            type=str,
+                            help="Source of spread feed")
 
         parser.add_argument(
             "--spread-feed-expiry",
@@ -153,7 +161,9 @@ class EtherDeltaMarketMakerKeeper:
             help="Maximum age of the spread feed (in seconds, default: 3600)",
         )
 
-        parser.add_argument("--control-feed", type=str, help="Source of control feed")
+        parser.add_argument("--control-feed",
+                            type=str,
+                            help="Source of control feed")
 
         parser.add_argument(
             "--control-feed-expiry",
@@ -162,15 +172,16 @@ class EtherDeltaMarketMakerKeeper:
             help="Maximum age of the control feed (in seconds, default: 86400)",
         )
 
-        parser.add_argument(
-            "--order-history", type=str, help="Endpoint to report active orders to"
-        )
+        parser.add_argument("--order-history",
+                            type=str,
+                            help="Endpoint to report active orders to")
 
         parser.add_argument(
             "--order-history-every",
             type=int,
             default=30,
-            help="Frequency of reporting active orders (in seconds, default: 30)",
+            help=
+            "Frequency of reporting active orders (in seconds, default: 30)",
         )
 
         parser.add_argument(
@@ -184,7 +195,8 @@ class EtherDeltaMarketMakerKeeper:
             "--order-expiry-threshold",
             type=int,
             default=0,
-            help="Remaining order age (in blocks) at which order is considered already expired, which"
+            help=
+            "Remaining order age (in blocks) at which order is considered already expired, which"
             " means the keeper will send a new replacement order slightly ahead",
         )
 
@@ -192,7 +204,8 @@ class EtherDeltaMarketMakerKeeper:
             "--order-no-cancel-threshold",
             type=int,
             default=0,
-            help="Remaining order age (in blocks) below which keeper does not try to cancel orders,"
+            help=
+            "Remaining order age (in blocks) below which keeper does not try to cancel orders,"
             " assuming that they will probably expire before the cancel transaction gets mined",
         )
 
@@ -200,7 +213,8 @@ class EtherDeltaMarketMakerKeeper:
             "--eth-reserve",
             type=float,
             required=True,
-            help="Amount of ETH which will never be deposited so the keeper can cover gas",
+            help=
+            "Amount of ETH which will never be deposited so the keeper can cover gas",
         )
 
         parser.add_argument(
@@ -214,39 +228,45 @@ class EtherDeltaMarketMakerKeeper:
             "--min-eth-deposit",
             type=float,
             required=True,
-            help="Minimum amount of ETH that can be deposited in one transaction",
+            help=
+            "Minimum amount of ETH that can be deposited in one transaction",
         )
 
         parser.add_argument(
             "--min-sai-deposit",
             type=float,
             required=True,
-            help="Minimum amount of SAI that can be deposited in one transaction",
+            help=
+            "Minimum amount of SAI that can be deposited in one transaction",
         )
 
         parser.add_argument(
             "--cancel-on-shutdown",
             dest="cancel_on_shutdown",
             action="store_true",
-            help="Whether should cancel all open orders on EtherDelta on keeper shutdown",
+            help=
+            "Whether should cancel all open orders on EtherDelta on keeper shutdown",
         )
 
         parser.add_argument(
             "--withdraw-on-shutdown",
             dest="withdraw_on_shutdown",
             action="store_true",
-            help="Whether should withdraw all tokens from EtherDelta on keeper shutdown",
+            help=
+            "Whether should withdraw all tokens from EtherDelta on keeper shutdown",
         )
 
-        parser.add_argument(
-            "--gas-price", type=int, default=0, help="Gas price (in Wei)"
-        )
+        parser.add_argument("--gas-price",
+                            type=int,
+                            default=0,
+                            help="Gas price (in Wei)")
 
         parser.add_argument(
             "--smart-gas-price",
             dest="smart_gas_price",
             action="store_true",
-            help="Use smart gas pricing strategy, based on the ethgasstation.info feed",
+            help=
+            "Use smart gas pricing strategy, based on the ethgasstation.info feed",
         )
 
         parser.add_argument(
@@ -256,30 +276,29 @@ class EtherDeltaMarketMakerKeeper:
             help="ethgasstation API key",
         )
 
-        parser.add_argument(
-            "--debug", dest="debug", action="store_true", help="Enable debug output"
-        )
+        parser.add_argument("--debug",
+                            dest="debug",
+                            action="store_true",
+                            help="Enable debug output")
 
-        parser.set_defaults(cancel_on_shutdown=False, withdraw_on_shutdown=False)
+        parser.set_defaults(cancel_on_shutdown=False,
+                            withdraw_on_shutdown=False)
 
         self.arguments = parser.parse_args(args)
         setup_logging(self.arguments)
 
-        self.web3 = (
-            kwargs["web3"]
-            if "web3" in kwargs
-            else Web3(
-                HTTPProvider(
-                    endpoint_uri=f"http://{self.arguments.rpc_host}:{self.arguments.rpc_port}",
-                    request_kwargs={"timeout": self.arguments.rpc_timeout},
-                )
-            )
-        )
+        self.web3 = (kwargs["web3"] if "web3" in kwargs else Web3(
+            HTTPProvider(
+                endpoint_uri=
+                f"http://{self.arguments.rpc_host}:{self.arguments.rpc_port}",
+                request_kwargs={"timeout": self.arguments.rpc_timeout},
+            )))
         self.web3.eth.defaultAccount = self.arguments.eth_from
         self.our_address = Address(self.arguments.eth_from)
         register_keys(self.web3, self.arguments.eth_key)
 
-        self.tub = Tub(web3=self.web3, address=Address(self.arguments.tub_address))
+        self.tub = Tub(web3=self.web3,
+                       address=Address(self.arguments.tub_address))
         self.sai = ERC20Token(web3=self.web3, address=self.tub.sai())
         self.gem = ERC20Token(web3=self.web3, address=self.tub.gem())
 
@@ -289,24 +308,25 @@ class EtherDeltaMarketMakerKeeper:
         self.min_eth_deposit = Wad.from_number(self.arguments.min_eth_deposit)
         self.min_sai_deposit = Wad.from_number(self.arguments.min_sai_deposit)
         self.gas_price = GasPriceFactory().create_gas_price(self.arguments)
-        self.price_feed = PriceFeedFactory().create_price_feed(self.arguments, self.tub)
+        self.price_feed = PriceFeedFactory().create_price_feed(
+            self.arguments, self.tub)
         self.spread_feed = create_spread_feed(self.arguments)
         self.control_feed = create_control_feed(self.arguments)
-        self.order_history_reporter = create_order_history_reporter(self.arguments)
+        self.order_history_reporter = create_order_history_reporter(
+            self.arguments)
 
         if self.eth_reserve <= self.min_eth_balance:
-            raise Exception("--eth-reserve must be higher than --min-eth-balance")
+            raise Exception(
+                "--eth-reserve must be higher than --min-eth-balance")
 
         assert self.arguments.order_expiry_threshold >= 0
-        assert (
-            self.arguments.order_no_cancel_threshold
-            >= self.arguments.order_expiry_threshold
-        )
+        assert (self.arguments.order_no_cancel_threshold >=
+                self.arguments.order_expiry_threshold)
 
         self.history = History()
-        self.etherdelta = EtherDelta(
-            web3=self.web3, address=Address(self.arguments.etherdelta_address)
-        )
+        self.etherdelta = EtherDelta(web3=self.web3,
+                                     address=Address(
+                                         self.arguments.etherdelta_address))
         self.etherdelta_api = EtherDeltaApi(
             client_tool_directory="lib/pymaker/utils/etherdelta-client",
             client_tool_command="node main.js",
@@ -345,8 +365,7 @@ class EtherDeltaMarketMakerKeeper:
             map(
                 lambda address: ERC20Token(web3=self.web3, address=address),
                 token_addresses,
-            )
-        )
+            ))
 
         self.etherdelta.approve(tokens, directly(gas_price=self.gas_price))
 
@@ -369,20 +388,18 @@ class EtherDeltaMarketMakerKeeper:
     def our_sell_orders(self):
         return list(
             filter(
-                lambda order: order.buy_token == self.token_buy()
-                and order.pay_token == self.token_sell(),
+                lambda order: order.buy_token == self.token_buy() and order.
+                pay_token == self.token_sell(),
                 self.our_orders,
-            )
-        )
+            ))
 
     def our_buy_orders(self):
         return list(
             filter(
-                lambda order: order.buy_token == self.token_sell()
-                and order.pay_token == self.token_buy(),
+                lambda order: order.buy_token == self.token_sell() and order.
+                pay_token == self.token_buy(),
                 self.our_orders,
-            )
-        )
+            ))
 
     def synchronize_orders(self):
         # If keeper balance is below `--min-eth-balance`, cancel all orders but do not terminate
@@ -404,9 +421,8 @@ class EtherDeltaMarketMakerKeeper:
 
             return
 
-        bands = Bands.read(
-            self.bands_config, self.spread_feed, self.control_feed, self.history
-        )
+        bands = Bands.read(self.bands_config, self.spread_feed,
+                           self.control_feed, self.history)
         block_number = self.web3.eth.blockNumber
         target_price = self.price_feed.get_price()
 
@@ -414,21 +430,19 @@ class EtherDeltaMarketMakerKeeper:
         self.remove_expired_orders(block_number)
 
         # Cancel orders
-        cancellable_orders = bands.cancellable_orders(
-            self.our_buy_orders(), self.our_sell_orders(), target_price
-        )
+        cancellable_orders = bands.cancellable_orders(self.our_buy_orders(),
+                                                      self.our_sell_orders(),
+                                                      target_price)
         if len(cancellable_orders) > 0:
             self.cancel_orders(cancellable_orders, block_number)
             return
 
         # In case of EtherDelta, balances returned by `our_total_balance` still contain amounts "locked"
         # by currently open orders, so we need to explicitly subtract these amounts.
-        our_buy_balance = self.our_total_balance(self.token_buy()) - Bands.total_amount(
-            self.our_buy_orders()
-        )
+        our_buy_balance = self.our_total_balance(
+            self.token_buy()) - Bands.total_amount(self.our_buy_orders())
         our_sell_balance = self.our_total_balance(
-            self.token_sell()
-        ) - Bands.total_amount(self.our_sell_orders())
+            self.token_sell()) - Bands.total_amount(self.our_sell_orders())
 
         # Evaluate if we need to create new orders, and how much do we need to deposit
         new_orders, missing_buy_amount, missing_sell_amount = bands.new_orders(
@@ -457,7 +471,8 @@ class EtherDeltaMarketMakerKeeper:
             self.place_orders(new_orders)
 
     @staticmethod
-    def is_order_age_above_threshold(order: Order, block_number: int, threshold: int):
+    def is_order_age_above_threshold(order: Order, block_number: int,
+                                     threshold: int):
         # we do >= 0, which makes us effectively detect an order
         return block_number >= order.expires - threshold
         # as expired one block earlier than the contract, but
@@ -465,35 +480,26 @@ class EtherDeltaMarketMakerKeeper:
 
     def is_expired(self, order: Order, block_number: int):
         return self.is_order_age_above_threshold(
-            order, block_number, self.arguments.order_expiry_threshold
-        )
+            order, block_number, self.arguments.order_expiry_threshold)
 
     def is_non_cancellable(self, order: Order, block_number: int):
         return self.is_order_age_above_threshold(
-            order, block_number, self.arguments.order_no_cancel_threshold
-        )
+            order, block_number, self.arguments.order_no_cancel_threshold)
 
     def remove_expired_orders(self, block_number: int):
         self.our_orders = list(
-            filter(
-                lambda order: not self.is_expired(order, block_number), self.our_orders
-            )
-        )
+            filter(lambda order: not self.is_expired(order, block_number),
+                   self.our_orders))
 
     def cancel_orders(self, orders: Iterable, block_number: int):
         cancellable_orders = list(
             filter(
-                lambda order: not self.is_non_cancellable(order, block_number), orders
-            )
-        )
-        synchronize(
-            [
-                self.etherdelta.cancel_order(order).transact_async(
-                    gas_price=self.gas_price
-                )
-                for order in cancellable_orders
-            ]
-        )
+                lambda order: not self.is_non_cancellable(order, block_number),
+                orders))
+        synchronize([
+            self.etherdelta.cancel_order(order).transact_async(
+                gas_price=self.gas_price) for order in cancellable_orders
+        ])
         self.our_orders = list(set(self.our_orders) - set(cancellable_orders))
 
     def cancel_all_orders(self):
@@ -509,7 +515,8 @@ class EtherDeltaMarketMakerKeeper:
                     pay_amount=round(new_order.pay_amount, 9),
                     buy_token=self.token_buy(),
                     buy_amount=round(new_order.buy_amount, 9),
-                    expires=self.web3.eth.blockNumber + self.arguments.order_age,
+                    expires=self.web3.eth.blockNumber +
+                    self.arguments.order_age,
                 )
             else:
                 order = self.etherdelta.create_order(
@@ -517,7 +524,8 @@ class EtherDeltaMarketMakerKeeper:
                     pay_amount=round(new_order.pay_amount, 9),
                     buy_token=self.token_sell(),
                     buy_amount=round(new_order.buy_amount, 9),
-                    expires=self.web3.eth.blockNumber + self.arguments.order_age,
+                    expires=self.web3.eth.blockNumber +
+                    self.arguments.order_age,
                 )
 
             self.place_order(order)
@@ -527,43 +535,38 @@ class EtherDeltaMarketMakerKeeper:
     def withdraw_everything(self):
         eth_balance = self.etherdelta.balance_of(self.our_address)
         if eth_balance > Wad(0):
-            self.etherdelta.withdraw(eth_balance).transact(gas_price=self.gas_price)
+            self.etherdelta.withdraw(eth_balance).transact(
+                gas_price=self.gas_price)
 
-        sai_balance = self.etherdelta.balance_of_token(
-            self.sai.address, self.our_address
-        )
+        sai_balance = self.etherdelta.balance_of_token(self.sai.address,
+                                                       self.our_address)
         if sai_balance > Wad(0):
-            self.etherdelta.withdraw_token(self.sai.address, sai_balance).transact()
+            self.etherdelta.withdraw_token(self.sai.address,
+                                           sai_balance).transact()
 
     def depositable_balance(self, token: Address) -> Wad:
         if token == EtherDelta.ETH_TOKEN:
             return Wad.max(
-                eth_balance(self.web3, self.our_address) - self.eth_reserve, Wad(0)
-            )
+                eth_balance(self.web3, self.our_address) - self.eth_reserve,
+                Wad(0))
         else:
-            return ERC20Token(web3=self.web3, address=token).balance_of(
-                self.our_address
-            )
+            return ERC20Token(web3=self.web3,
+                              address=token).balance_of(self.our_address)
 
     def deposit_for_sell_order(self):
         depositable_eth = self.depositable_balance(self.token_sell())
         if depositable_eth > self.min_eth_deposit:
-            return (
-                self.etherdelta.deposit(depositable_eth)
-                .transact(gas_price=self.gas_price)
-                .successful
-            )
+            return (self.etherdelta.deposit(depositable_eth).transact(
+                gas_price=self.gas_price).successful)
         else:
             return False
 
     def deposit_for_buy_order(self):
         depositable_sai = self.depositable_balance(self.token_buy())
         if depositable_sai > self.min_sai_deposit:
-            return (
-                self.etherdelta.deposit_token(self.token_buy(), depositable_sai)
-                .transact(gas_price=self.gas_price)
-                .successful
-            )
+            return (self.etherdelta.deposit_token(
+                self.token_buy(),
+                depositable_sai).transact(gas_price=self.gas_price).successful)
         else:
             return False
 

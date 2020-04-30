@@ -63,9 +63,10 @@ class MpxMarketMakerKeeper:
             help="JSON-RPC host (default: `localhost')",
         )
 
-        parser.add_argument(
-            "--rpc-port", type=int, default=8545, help="JSON-RPC port (default: `8545')"
-        )
+        parser.add_argument("--rpc-port",
+                            type=int,
+                            default=8545,
+                            help="JSON-RPC port (default: `8545')")
 
         parser.add_argument(
             "--rpc-timeout",
@@ -85,14 +86,16 @@ class MpxMarketMakerKeeper:
             "--eth-key",
             type=str,
             nargs="*",
-            help="Ethereum private key(s) to use (e.g. 'key_file=aaa.json,pass_file=aaa.pass')",
+            help=
+            "Ethereum private key(s) to use (e.g. 'key_file=aaa.json,pass_file=aaa.pass')",
         )
 
         parser.add_argument(
             "--mpx-api-server",
             type=str,
             default="https://api.mpexchange.io",
-            help="Address of the MPX API server (default: 'https://api.mpexchange.io')",
+            help=
+            "Address of the MPX API server (default: 'https://api.mpexchange.io')",
         )
 
         parser.add_argument(
@@ -137,15 +140,17 @@ class MpxMarketMakerKeeper:
             help="Ethereum address of the Buy Token",
         )
 
-        parser.add_argument(
-            "--gas-price", type=int, default=0, help="Gas price (in Wei)"
-        )
+        parser.add_argument("--gas-price",
+                            type=int,
+                            default=0,
+                            help="Gas price (in Wei)")
 
         parser.add_argument(
             "--smart-gas-price",
             dest="smart_gas_price",
             action="store_true",
-            help="Use smart gas pricing strategy, based on the ethgasstation.info feed",
+            help=
+            "Use smart gas pricing strategy, based on the ethgasstation.info feed",
         )
 
         parser.add_argument(
@@ -155,13 +160,15 @@ class MpxMarketMakerKeeper:
             help="ethgasstation API key",
         )
 
-        parser.add_argument(
-            "--config", type=str, required=True, help="Bands configuration file"
-        )
+        parser.add_argument("--config",
+                            type=str,
+                            required=True,
+                            help="Bands configuration file")
 
-        parser.add_argument(
-            "--price-feed", type=str, required=True, help="Source of price feed"
-        )
+        parser.add_argument("--price-feed",
+                            type=str,
+                            required=True,
+                            help="Source of price feed")
 
         parser.add_argument(
             "--price-feed-expiry",
@@ -170,7 +177,9 @@ class MpxMarketMakerKeeper:
             help="Maximum age of the price feed (in seconds, default: 120)",
         )
 
-        parser.add_argument("--spread-feed", type=str, help="Source of spread feed")
+        parser.add_argument("--spread-feed",
+                            type=str,
+                            help="Source of spread feed")
 
         parser.add_argument(
             "--spread-feed-expiry",
@@ -179,7 +188,9 @@ class MpxMarketMakerKeeper:
             help="Maximum age of the spread feed (in seconds, default: 3600)",
         )
 
-        parser.add_argument("--control-feed", type=str, help="Source of control feed")
+        parser.add_argument("--control-feed",
+                            type=str,
+                            help="Source of control feed")
 
         parser.add_argument(
             "--control-feed-expiry",
@@ -188,15 +199,16 @@ class MpxMarketMakerKeeper:
             help="Maximum age of the control feed (in seconds, default: 86400)",
         )
 
-        parser.add_argument(
-            "--order-history", type=str, help="Endpoint to report active orders to"
-        )
+        parser.add_argument("--order-history",
+                            type=str,
+                            help="Endpoint to report active orders to")
 
         parser.add_argument(
             "--order-history-every",
             type=int,
             default=30,
-            help="Frequency of reporting active orders (in seconds, default: 30)",
+            help=
+            "Frequency of reporting active orders (in seconds, default: 30)",
         )
 
         parser.add_argument(
@@ -206,33 +218,30 @@ class MpxMarketMakerKeeper:
             help="Order book refresh frequency (in seconds, default: 3)",
         )
 
-        parser.add_argument(
-            "--debug", dest="debug", action="store_true", help="Enable debug output"
-        )
+        parser.add_argument("--debug",
+                            dest="debug",
+                            action="store_true",
+                            help="Enable debug output")
 
         self.arguments = parser.parse_args(args)
         setup_logging(self.arguments)
 
-        self.web3 = (
-            kwargs["web3"]
-            if "web3" in kwargs
-            else Web3(
-                HTTPProvider(
-                    endpoint_uri=f"http://{self.arguments.rpc_host}:{self.arguments.rpc_port}",
-                    request_kwargs={"timeout": self.arguments.rpc_timeout},
-                )
-            )
-        )
+        self.web3 = (kwargs["web3"] if "web3" in kwargs else Web3(
+            HTTPProvider(
+                endpoint_uri=
+                f"http://{self.arguments.rpc_host}:{self.arguments.rpc_port}",
+                request_kwargs={"timeout": self.arguments.rpc_timeout},
+            )))
         self.web3.eth.defaultAccount = self.arguments.eth_from
         self.our_address = Address(self.arguments.eth_from)
         register_keys(self.web3, self.arguments.eth_key)
 
-        self.token_buy = ERC20Token(
-            web3=self.web3, address=Address(self.arguments.buy_token_address)
-        )
-        self.token_sell = ERC20Token(
-            web3=self.web3, address=Address(self.arguments.sell_token_address)
-        )
+        self.token_buy = ERC20Token(web3=self.web3,
+                                    address=Address(
+                                        self.arguments.buy_token_address))
+        self.token_sell = ERC20Token(web3=self.web3,
+                                     address=Address(
+                                         self.arguments.sell_token_address))
 
         self.bands_config = ReloadableConfig(self.arguments.config)
         self.price_max_decimals = None
@@ -240,13 +249,14 @@ class MpxMarketMakerKeeper:
         self.price_feed = PriceFeedFactory().create_price_feed(self.arguments)
         self.spread_feed = create_spread_feed(self.arguments)
         self.control_feed = create_control_feed(self.arguments)
-        self.order_history_reporter = create_order_history_reporter(self.arguments)
+        self.order_history_reporter = create_order_history_reporter(
+            self.arguments)
 
         self.history = History()
 
-        self.zrx_exchange = ZrxExchangeV2(
-            web3=self.web3, address=Address(self.arguments.exchange_address)
-        )
+        self.zrx_exchange = ZrxExchangeV2(web3=self.web3,
+                                          address=Address(
+                                              self.arguments.exchange_address))
         self.mpx_api = MpxApi(
             api_server=self.arguments.mpx_api_server,
             zrx_exchange=self.zrx_exchange,
@@ -256,19 +266,18 @@ class MpxMarketMakerKeeper:
         )
 
         self.zrx_relayer_api = ZrxRelayerApiV2(
-            exchange=self.zrx_exchange, api_server=self.arguments.mpx_api_server
-        )
-        self.zrx_api = ZrxApiV2(
-            zrx_exchange=self.zrx_exchange, zrx_api=self.zrx_relayer_api
-        )
+            exchange=self.zrx_exchange,
+            api_server=self.arguments.mpx_api_server)
+        self.zrx_api = ZrxApiV2(zrx_exchange=self.zrx_exchange,
+                                zrx_api=self.zrx_relayer_api)
 
         markets = self.mpx_api.get_markets()["data"]
         market = next(
             filter(
-                lambda item: item["attributes"]["pair-name"] == self.arguments.pair,
+                lambda item: item["attributes"]["pair-name"] == self.arguments.
+                pair,
                 markets,
-            )
-        )
+            ))
 
         self.pair = MpxPair(
             self.arguments.pair,
@@ -279,15 +288,14 @@ class MpxMarketMakerKeeper:
         )
 
         self.order_book_manager = OrderBookManager(
-            refresh_frequency=self.arguments.refresh_frequency
-        )
+            refresh_frequency=self.arguments.refresh_frequency)
         self.order_book_manager.get_orders_with(lambda: self.get_orders())
         self.order_book_manager.get_balances_with(lambda: self.get_balances())
         self.order_book_manager.cancel_orders_with(self.cancel_order_function)
         self.order_book_manager.place_orders_with(self.place_order_function)
         self.order_book_manager.enable_history_reporting(
-            self.order_history_reporter, self.our_buy_orders, self.our_sell_orders
-        )
+            self.order_history_reporter, self.our_buy_orders,
+            self.our_sell_orders)
         self.order_book_manager.start()
 
     def main(self):
@@ -301,16 +309,16 @@ class MpxMarketMakerKeeper:
         self.approve()
 
     def approve(self):
-        self.zrx_exchange.approve(
-            [self.token_sell, self.token_buy], directly(gas_price=self.gas_price)
-        )
+        self.zrx_exchange.approve([self.token_sell, self.token_buy],
+                                  directly(gas_price=self.gas_price))
 
     def shutdown(self):
         self.order_book_manager.cancel_all_orders()
 
     def get_balances(self):
         balances = self.zrx_api.get_balances(self.pair)
-        return balances[0], balances[1], eth_balance(self.web3, self.our_address)
+        return balances[0], balances[1], eth_balance(self.web3,
+                                                     self.our_address)
 
     def get_orders(self) -> list:
         orders = self.mpx_api.get_orders(self.pair)
@@ -326,9 +334,8 @@ class MpxMarketMakerKeeper:
         return list(filter(lambda order: not order.is_sell, our_orders))
 
     def synchronize_orders(self):
-        bands = Bands.read(
-            self.bands_config, self.spread_feed, self.control_feed, self.history
-        )
+        bands = Bands.read(self.bands_config, self.spread_feed,
+                           self.control_feed, self.history)
         order_book = self.order_book_manager.get_order_book()
         target_price = self.price_feed.get_price()
 
@@ -344,17 +351,18 @@ class MpxMarketMakerKeeper:
 
         # Do not place new orders if order book state is not confirmed
         if order_book.orders_being_placed or order_book.orders_being_cancelled:
-            self.logger.debug("Order book is in progress, not placing new orders")
+            self.logger.debug(
+                "Order book is in progress, not placing new orders")
             return
 
         # In case of MPX, balances returned by `our_total_balance` still contain amounts "locked"
         # by currently open orders, so we need to explicitly subtract these amounts.
-        our_buy_balance = self.our_total_balance(self.token_buy) - Bands.total_amount(
-            self.our_buy_orders(order_book.orders)
-        )
-        our_sell_balance = self.our_total_balance(self.token_sell) - Bands.total_amount(
-            self.our_sell_orders(order_book.orders)
-        )
+        our_buy_balance = self.our_total_balance(
+            self.token_buy) - Bands.total_amount(
+                self.our_buy_orders(order_book.orders))
+        our_sell_balance = self.our_total_balance(
+            self.token_sell) - Bands.total_amount(
+                self.our_sell_orders(order_book.orders))
 
         # Place new orders
         self.order_book_manager.place_orders(
@@ -364,17 +372,17 @@ class MpxMarketMakerKeeper:
                 our_buy_balance=our_buy_balance,
                 our_sell_balance=our_sell_balance,
                 target_price=target_price,
-            )[0]
-        )
+            )[0])
 
     def place_order_function(self, new_order: NewOrder):
         assert isinstance(new_order, NewOrder)
 
         price = round(new_order.price, self.price_max_decimals)
         amount = new_order.pay_amount if new_order.is_sell else new_order.buy_amount
-        zrx_order = self.mpx_api.place_order(
-            pair=self.pair, is_sell=new_order.is_sell, price=price, amount=amount
-        )
+        zrx_order = self.mpx_api.place_order(pair=self.pair,
+                                             is_sell=new_order.is_sell,
+                                             price=price,
+                                             amount=amount)
 
         if zrx_order is not None:
             return self.zrx_api.get_orders(self.pair, [zrx_order])[0]
@@ -384,9 +392,8 @@ class MpxMarketMakerKeeper:
     def cancel_order_function(self, order):
         self.logger.info(f"Canceling order {order.zrx_order.order_hash}")
         if self.mpx_api.cancel_order(order.zrx_order.order_hash):
-            transact = self.zrx_exchange.cancel_order(order.zrx_order).transact(
-                gas_price=self.gas_price
-            )
+            transact = self.zrx_exchange.cancel_order(
+                order.zrx_order).transact(gas_price=self.gas_price)
             return transact is not None and transact.successful
 
         return False

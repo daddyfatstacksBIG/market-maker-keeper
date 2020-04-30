@@ -50,12 +50,14 @@ class BitsoMarketMakerKeeper:
             "--bitso-api-server",
             type=str,
             default="https://api.bitso.com",
-            help="Address of the bitso API server (default: 'https://api.bitso.com')",
+            help=
+            "Address of the bitso API server (default: 'https://api.bitso.com')",
         )
 
-        parser.add_argument(
-            "--bitso-api-key", type=str, required=True, help="API key for the Bitso API"
-        )
+        parser.add_argument("--bitso-api-key",
+                            type=str,
+                            required=True,
+                            help="API key for the Bitso API")
 
         parser.add_argument(
             "--bitso-secret-key",
@@ -68,7 +70,8 @@ class BitsoMarketMakerKeeper:
             "--bitso-timeout",
             type=float,
             default=9.5,
-            help="Timeout for accessing the Bitso API (in seconds, default: 9.5)",
+            help=
+            "Timeout for accessing the Bitso API (in seconds, default: 9.5)",
         )
 
         parser.add_argument(
@@ -78,13 +81,15 @@ class BitsoMarketMakerKeeper:
             help="Token pair (sell/buy) on which the keeper will operate",
         )
 
-        parser.add_argument(
-            "--config", type=str, required=True, help="Bands configuration file"
-        )
+        parser.add_argument("--config",
+                            type=str,
+                            required=True,
+                            help="Bands configuration file")
 
-        parser.add_argument(
-            "--price-feed", type=str, required=True, help="Source of price feed"
-        )
+        parser.add_argument("--price-feed",
+                            type=str,
+                            required=True,
+                            help="Source of price feed")
 
         parser.add_argument(
             "--price-feed-expiry",
@@ -93,7 +98,9 @@ class BitsoMarketMakerKeeper:
             help="Maximum age of the price feed (in seconds, default: 120)",
         )
 
-        parser.add_argument("--spread-feed", type=str, help="Source of spread feed")
+        parser.add_argument("--spread-feed",
+                            type=str,
+                            help="Source of spread feed")
 
         parser.add_argument(
             "--spread-feed-expiry",
@@ -102,7 +109,9 @@ class BitsoMarketMakerKeeper:
             help="Maximum age of the spread feed (in seconds, default: 3600)",
         )
 
-        parser.add_argument("--control-feed", type=str, help="Source of control feed")
+        parser.add_argument("--control-feed",
+                            type=str,
+                            help="Source of control feed")
 
         parser.add_argument(
             "--control-feed-expiry",
@@ -111,15 +120,16 @@ class BitsoMarketMakerKeeper:
             help="Maximum age of the control feed (in seconds, default: 86400)",
         )
 
-        parser.add_argument(
-            "--order-history", type=str, help="Endpoint to report active orders to"
-        )
+        parser.add_argument("--order-history",
+                            type=str,
+                            help="Endpoint to report active orders to")
 
         parser.add_argument(
             "--order-history-every",
             type=int,
             default=30,
-            help="Frequency of reporting active orders (in seconds, default: 30)",
+            help=
+            "Frequency of reporting active orders (in seconds, default: 30)",
         )
 
         parser.add_argument(
@@ -129,9 +139,10 @@ class BitsoMarketMakerKeeper:
             help="Order book refresh frequency (in seconds, default: 3)",
         )
 
-        parser.add_argument(
-            "--debug", dest="debug", action="store_true", help="Enable debug output"
-        )
+        parser.add_argument("--debug",
+                            dest="debug",
+                            action="store_true",
+                            help="Enable debug output")
 
         self.arguments = parser.parse_args(args)
         setup_logging(self.arguments)
@@ -140,7 +151,8 @@ class BitsoMarketMakerKeeper:
         self.price_feed = PriceFeedFactory().create_price_feed(self.arguments)
         self.spread_feed = create_spread_feed(self.arguments)
         self.control_feed = create_control_feed(self.arguments)
-        self.order_history_reporter = create_order_history_reporter(self.arguments)
+        self.order_history_reporter = create_order_history_reporter(
+            self.arguments)
 
         self.history = History()
         self.bitso_api = BitsoApi(
@@ -151,18 +163,16 @@ class BitsoMarketMakerKeeper:
         )
 
         self.order_book_manager = OrderBookManager(
-            refresh_frequency=self.arguments.refresh_frequency
-        )
-        self.order_book_manager.get_orders_with(
-            lambda: self.bitso_api.get_orders(self.pair())
-        )
-        self.order_book_manager.get_balances_with(lambda: self.bitso_api.get_balances())
+            refresh_frequency=self.arguments.refresh_frequency)
+        self.order_book_manager.get_orders_with(lambda: self.bitso_api.
+                                                get_orders(self.pair()))
+        self.order_book_manager.get_balances_with(lambda: self.bitso_api.
+                                                  get_balances())
         self.order_book_manager.cancel_orders_with(
-            lambda order: self.bitso_api.cancel_order(order.order_id)
-        )
+            lambda order: self.bitso_api.cancel_order(order.order_id))
         self.order_book_manager.enable_history_reporting(
-            self.order_history_reporter, self.our_buy_orders, self.our_sell_orders
-        )
+            self.order_history_reporter, self.our_buy_orders,
+            self.our_sell_orders)
         self.order_book_manager.start()
 
     def main(self):
@@ -184,9 +194,8 @@ class BitsoMarketMakerKeeper:
         return self.arguments.pair.split("_")[1].lower()
 
     def our_available_balance(self, our_balances: list, token: str) -> Wad:
-        balance = list(filter(lambda x: x["currency"] == token, our_balances))[0][
-            "total"
-        ]
+        balance = list(filter(lambda x: x["currency"] == token,
+                              our_balances))[0]["total"]
         return Wad.from_number(balance)
 
     def our_sell_orders(self, our_orders: list) -> list:
@@ -196,9 +205,8 @@ class BitsoMarketMakerKeeper:
         return list(filter(lambda order: not order.is_sell, our_orders))
 
     def synchronize_orders(self):
-        bands = Bands.read(
-            self.bands_config, self.spread_feed, self.control_feed, self.history
-        )
+        bands = Bands.read(self.bands_config, self.spread_feed,
+                           self.control_feed, self.history)
         order_book = self.order_book_manager.get_order_book()
         target_price = self.price_feed.get_price()
 
@@ -214,7 +222,8 @@ class BitsoMarketMakerKeeper:
 
         # Do not place new orders if order book state is not confirmed
         if order_book.orders_being_placed or order_book.orders_being_cancelled:
-            self.logger.debug("Order book is in progress, not placing new orders")
+            self.logger.debug(
+                "Order book is in progress, not placing new orders")
             return
 
         # Place new orders
@@ -223,31 +232,27 @@ class BitsoMarketMakerKeeper:
                 our_buy_orders=self.our_buy_orders(order_book.orders),
                 our_sell_orders=self.our_sell_orders(order_book.orders),
                 our_buy_balance=self.our_available_balance(
-                    order_book.balances, self.token_buy()
-                ),
+                    order_book.balances, self.token_buy()),
                 our_sell_balance=self.our_available_balance(
-                    order_book.balances, self.token_sell()
-                ),
+                    order_book.balances, self.token_sell()),
                 target_price=target_price,
-            )[0]
-        )
+            )[0])
 
     def place_orders(self, new_orders):
         def place_order_function(new_order_to_be_placed):
-            amount = (
-                new_order_to_be_placed.pay_amount
-                if new_order_to_be_placed.is_sell
-                else new_order_to_be_placed.buy_amount
-            )
+            amount = (new_order_to_be_placed.pay_amount
+                      if new_order_to_be_placed.is_sell else
+                      new_order_to_be_placed.buy_amount)
 
             # Convert wad to float as Bitso limits amount decimal places to 8, and price to 2
             float_price = round(Wad.__float__(new_order_to_be_placed.price), 2)
             float_amount = round(Wad.__float__(amount), 8)
 
             side = "sell" if new_order_to_be_placed.is_sell == True else "buy"
-            order_id = self.bitso_api.place_order(
-                book=self.pair(), side=side, price=float_price, amount=float_amount
-            )
+            order_id = self.bitso_api.place_order(book=self.pair(),
+                                                  side=side,
+                                                  price=float_price,
+                                                  amount=float_amount)
 
             timestamp = datetime.now(tz=timezone.utc).isoformat()
 
@@ -262,8 +267,7 @@ class BitsoMarketMakerKeeper:
 
         for new_order in new_orders:
             self.order_book_manager.place_order(
-                lambda new_order=new_order: place_order_function(new_order)
-            )
+                lambda new_order=new_order: place_order_function(new_order))
 
 
 if __name__ == "__main__":

@@ -60,13 +60,15 @@ class DyDxMarketMakerKeeper(CEXKeeperAPI):
             help="Token pair (sell/buy) on which the keeper will operate",
         )
 
-        parser.add_argument(
-            "--config", type=str, required=True, help="Bands configuration file"
-        )
+        parser.add_argument("--config",
+                            type=str,
+                            required=True,
+                            help="Bands configuration file")
 
-        parser.add_argument(
-            "--price-feed", type=str, required=True, help="Source of price feed"
-        )
+        parser.add_argument("--price-feed",
+                            type=str,
+                            required=True,
+                            help="Source of price feed")
 
         parser.add_argument(
             "--price-feed-expiry",
@@ -75,7 +77,9 @@ class DyDxMarketMakerKeeper(CEXKeeperAPI):
             help="Maximum age of the price feed (in seconds, default: 120)",
         )
 
-        parser.add_argument("--spread-feed", type=str, help="Source of spread feed")
+        parser.add_argument("--spread-feed",
+                            type=str,
+                            help="Source of spread feed")
 
         parser.add_argument(
             "--spread-feed-expiry",
@@ -84,7 +88,9 @@ class DyDxMarketMakerKeeper(CEXKeeperAPI):
             help="Maximum age of the spread feed (in seconds, default: 3600)",
         )
 
-        parser.add_argument("--control-feed", type=str, help="Source of control feed")
+        parser.add_argument("--control-feed",
+                            type=str,
+                            help="Source of control feed")
 
         parser.add_argument(
             "--control-feed-expiry",
@@ -93,15 +99,16 @@ class DyDxMarketMakerKeeper(CEXKeeperAPI):
             help="Maximum age of the control feed (in seconds, default: 86400)",
         )
 
-        parser.add_argument(
-            "--order-history", type=str, help="Endpoint to report active orders to"
-        )
+        parser.add_argument("--order-history",
+                            type=str,
+                            help="Endpoint to report active orders to")
 
         parser.add_argument(
             "--order-history-every",
             type=int,
             default=30,
-            help="Frequency of reporting active orders (in seconds, default: 30)",
+            help=
+            "Frequency of reporting active orders (in seconds, default: 30)",
         )
 
         parser.add_argument(
@@ -111,9 +118,10 @@ class DyDxMarketMakerKeeper(CEXKeeperAPI):
             help="Order book refresh frequency (in seconds, default: 3)",
         )
 
-        parser.add_argument(
-            "--debug", dest="debug", action="store_true", help="Enable debug output"
-        )
+        parser.add_argument("--debug",
+                            dest="debug",
+                            action="store_true",
+                            help="Enable debug output")
 
         self.arguments = parser.parse_args(args)
 
@@ -137,17 +145,15 @@ class DyDxMarketMakerKeeper(CEXKeeperAPI):
         if token == "weth":
             token = "eth"
 
-        return list(filter(lambda x: x["currency"] == token.upper(), our_balances))[0][
-            "wad"
-        ]
+        return list(
+            filter(lambda x: x["currency"] == token.upper(),
+                   our_balances))[0]["wad"]
 
     def place_orders(self, new_orders):
         def place_order_function(new_order_to_be_placed):
-            amount = (
-                new_order_to_be_placed.pay_amount
-                if new_order_to_be_placed.is_sell
-                else new_order_to_be_placed.buy_amount
-            )
+            amount = (new_order_to_be_placed.pay_amount
+                      if new_order_to_be_placed.is_sell else
+                      new_order_to_be_placed.buy_amount)
             order_id = self.dydx_api.place_order(
                 pair=self.pair().upper(),
                 is_sell=new_order_to_be_placed.is_sell,
@@ -166,8 +172,7 @@ class DyDxMarketMakerKeeper(CEXKeeperAPI):
 
         for new_order in new_orders:
             self.order_book_manager.place_order(
-                lambda new_order=new_order: place_order_function(new_order)
-            )
+                lambda new_order=new_order: place_order_function(new_order))
 
 
 if __name__ == "__main__":

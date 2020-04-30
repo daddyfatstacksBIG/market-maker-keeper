@@ -62,9 +62,10 @@ class OasisMarketMakerKeeper:
             help="JSON-RPC host (default: `localhost')",
         )
 
-        parser.add_argument(
-            "--rpc-port", type=int, default=8545, help="JSON-RPC port (default: `8545')"
-        )
+        parser.add_argument("--rpc-port",
+                            type=int,
+                            default=8545,
+                            help="JSON-RPC port (default: `8545')")
 
         parser.add_argument(
             "--rpc-timeout",
@@ -84,7 +85,8 @@ class OasisMarketMakerKeeper:
             "--eth-key",
             type=str,
             nargs="*",
-            help="Ethereum private key(s) to use (e.g. 'key_file=aaa.json,pass_file=aaa.pass')",
+            help=
+            "Ethereum private key(s) to use (e.g. 'key_file=aaa.json,pass_file=aaa.pass')",
         )
 
         parser.add_argument(
@@ -150,13 +152,15 @@ class OasisMarketMakerKeeper:
             help="Ethereum address of the sell token",
         )
 
-        parser.add_argument(
-            "--config", type=str, required=True, help="Bands configuration file"
-        )
+        parser.add_argument("--config",
+                            type=str,
+                            required=True,
+                            help="Bands configuration file")
 
-        parser.add_argument(
-            "--price-feed", type=str, required=True, help="Source of price feed"
-        )
+        parser.add_argument("--price-feed",
+                            type=str,
+                            required=True,
+                            help="Source of price feed")
 
         parser.add_argument(
             "--price-feed-expiry",
@@ -165,7 +169,9 @@ class OasisMarketMakerKeeper:
             help="Maximum age of the price feed (in seconds, default: 120)",
         )
 
-        parser.add_argument("--spread-feed", type=str, help="Source of spread feed")
+        parser.add_argument("--spread-feed",
+                            type=str,
+                            help="Source of spread feed")
 
         parser.add_argument(
             "--spread-feed-expiry",
@@ -174,7 +180,9 @@ class OasisMarketMakerKeeper:
             help="Maximum age of the spread feed (in seconds, default: 3600)",
         )
 
-        parser.add_argument("--control-feed", type=str, help="Source of control feed")
+        parser.add_argument("--control-feed",
+                            type=str,
+                            help="Source of control feed")
 
         parser.add_argument(
             "--control-feed-expiry",
@@ -183,22 +191,24 @@ class OasisMarketMakerKeeper:
             help="Maximum age of the control feed (in seconds, default: 86400)",
         )
 
-        parser.add_argument(
-            "--order-history", type=str, help="Endpoint to report active orders to"
-        )
+        parser.add_argument("--order-history",
+                            type=str,
+                            help="Endpoint to report active orders to")
 
         parser.add_argument(
             "--order-history-every",
             type=int,
             default=30,
-            help="Frequency of reporting active orders (in seconds, default: 30)",
+            help=
+            "Frequency of reporting active orders (in seconds, default: 30)",
         )
 
         parser.add_argument(
             "--round-places",
             type=int,
             default=2,
-            help="Number of decimal places to round order prices to (default=2)",
+            help=
+            "Number of decimal places to round order prices to (default=2)",
         )
 
         parser.add_argument(
@@ -208,15 +218,17 @@ class OasisMarketMakerKeeper:
             help="Minimum ETH balance below which keeper will cease operation",
         )
 
-        parser.add_argument(
-            "--gas-price", type=int, default=0, help="Gas price (in Wei)"
-        )
+        parser.add_argument("--gas-price",
+                            type=int,
+                            default=0,
+                            help="Gas price (in Wei)")
 
         parser.add_argument(
             "--smart-gas-price",
             dest="smart_gas_price",
             action="store_true",
-            help="Use smart gas pricing strategy, based on the ethgasstation.info feed",
+            help=
+            "Use smart gas pricing strategy, based on the ethgasstation.info feed",
         )
 
         parser.add_argument(
@@ -233,23 +245,20 @@ class OasisMarketMakerKeeper:
             help="Order book refresh frequency (in seconds, default: 10)",
         )
 
-        parser.add_argument(
-            "--debug", dest="debug", action="store_true", help="Enable debug output"
-        )
+        parser.add_argument("--debug",
+                            dest="debug",
+                            action="store_true",
+                            help="Enable debug output")
 
         self.arguments = parser.parse_args(args)
         setup_logging(self.arguments)
 
-        self.web3 = (
-            kwargs["web3"]
-            if "web3" in kwargs
-            else Web3(
-                HTTPProvider(
-                    endpoint_uri=f"http://{self.arguments.rpc_host}:{self.arguments.rpc_port}",
-                    request_kwargs={"timeout": self.arguments.rpc_timeout},
-                )
-            )
-        )
+        self.web3 = (kwargs["web3"] if "web3" in kwargs else Web3(
+            HTTPProvider(
+                endpoint_uri=
+                f"http://{self.arguments.rpc_host}:{self.arguments.rpc_port}",
+                request_kwargs={"timeout": self.arguments.rpc_timeout},
+            )))
         self.web3.eth.defaultAccount = self.arguments.eth_from
         register_keys(self.web3, self.arguments.eth_key)
         self.our_address = Address(self.arguments.eth_from)
@@ -257,22 +266,18 @@ class OasisMarketMakerKeeper:
             web3=self.web3,
             address=Address(self.arguments.oasis_address),
             support_address=Address(self.arguments.oasis_support_address)
-            if self.arguments.oasis_support_address
-            else None,
+            if self.arguments.oasis_support_address else None,
         )
 
-        tub = (
-            Tub(web3=self.web3, address=Address(self.arguments.tub_address))
-            if self.arguments.tub_address is not None
-            else None
-        )
+        tub = (Tub(web3=self.web3, address=Address(self.arguments.tub_address))
+               if self.arguments.tub_address is not None else None)
 
-        self.token_buy = ERC20Token(
-            web3=self.web3, address=Address(self.arguments.buy_token_address)
-        )
-        self.token_sell = ERC20Token(
-            web3=self.web3, address=Address(self.arguments.sell_token_address)
-        )
+        self.token_buy = ERC20Token(web3=self.web3,
+                                    address=Address(
+                                        self.arguments.buy_token_address))
+        self.token_sell = ERC20Token(web3=self.web3,
+                                     address=Address(
+                                         self.arguments.sell_token_address))
         self.buy_token = Token(
             name=self.arguments.buy_token_name,
             address=Address(self.arguments.buy_token_address),
@@ -286,21 +291,22 @@ class OasisMarketMakerKeeper:
         self.min_eth_balance = Wad.from_number(self.arguments.min_eth_balance)
         self.bands_config = ReloadableConfig(self.arguments.config)
         self.gas_price = GasPriceFactory().create_gas_price(self.arguments)
-        self.price_feed = PriceFeedFactory().create_price_feed(self.arguments, tub)
+        self.price_feed = PriceFeedFactory().create_price_feed(
+            self.arguments, tub)
         self.spread_feed = create_spread_feed(self.arguments)
         self.control_feed = create_control_feed(self.arguments)
-        self.order_history_reporter = create_order_history_reporter(self.arguments)
+        self.order_history_reporter = create_order_history_reporter(
+            self.arguments)
 
         self.history = History()
         self.order_book_manager = OrderBookManager(
-            refresh_frequency=self.arguments.refresh_frequency
-        )
+            refresh_frequency=self.arguments.refresh_frequency)
         self.order_book_manager.get_orders_with(lambda: self.our_orders())
         self.order_book_manager.place_orders_with(self.place_order_function)
         self.order_book_manager.cancel_orders_with(self.cancel_order_function)
         self.order_book_manager.enable_history_reporting(
-            self.order_history_reporter, self.our_buy_orders, self.our_sell_orders
-        )
+            self.order_history_reporter, self.our_buy_orders,
+            self.our_sell_orders)
         self.order_book_manager.start()
 
     def main(self):
@@ -318,42 +324,40 @@ class OasisMarketMakerKeeper:
 
     def approve(self):
         """Approve OasisDEX to access our balances, so we can place orders."""
-        self.otc.approve(
-            [self.token_sell, self.token_buy], directly(gas_price=self.gas_price)
-        )
+        self.otc.approve([self.token_sell, self.token_buy],
+                         directly(gas_price=self.gas_price))
 
     def our_available_balance(self, token: ERC20Token) -> Wad:
         if token.symbol() == self.buy_token.name:
-            return self.buy_token.normalize_amount(token.balance_of(self.our_address))
+            return self.buy_token.normalize_amount(
+                token.balance_of(self.our_address))
         else:
-            return self.sell_token.normalize_amount(token.balance_of(self.our_address))
+            return self.sell_token.normalize_amount(
+                token.balance_of(self.our_address))
 
     def our_orders(self):
         return list(
             filter(
                 lambda order: order.maker == self.our_address,
-                self.otc.get_orders(self.sell_token, self.buy_token)
-                + self.otc.get_orders(self.buy_token, self.sell_token),
-            )
-        )
+                self.otc.get_orders(self.sell_token, self.buy_token) +
+                self.otc.get_orders(self.buy_token, self.sell_token),
+            ))
 
     def our_sell_orders(self, our_orders: list):
         return list(
             filter(
-                lambda order: order.buy_token == self.token_buy.address
-                and order.pay_token == self.token_sell.address,
+                lambda order: order.buy_token == self.token_buy.address and
+                order.pay_token == self.token_sell.address,
                 our_orders,
-            )
-        )
+            ))
 
     def our_buy_orders(self, our_orders: list):
         return list(
             filter(
-                lambda order: order.buy_token == self.token_sell.address
-                and order.pay_token == self.token_buy.address,
+                lambda order: order.buy_token == self.token_sell.address and
+                order.pay_token == self.token_buy.address,
                 our_orders,
-            )
-        )
+            ))
 
     def synchronize_orders(self):
         # If market is closed, cancel all orders but do not terminate the keeper.
@@ -367,14 +371,12 @@ class OasisMarketMakerKeeper:
         # resume activity straight away, without the need to restart it.
         if eth_balance(self.web3, self.our_address) < self.min_eth_balance:
             self.logger.warning(
-                "Keeper ETH balance below minimum. Cancelling all orders."
-            )
+                "Keeper ETH balance below minimum. Cancelling all orders.")
             self.order_book_manager.cancel_all_orders()
             return
 
-        bands = Bands.read(
-            self.bands_config, self.spread_feed, self.control_feed, self.history
-        )
+        bands = Bands.read(self.bands_config, self.spread_feed,
+                           self.control_feed, self.history)
         order_book = self.order_book_manager.get_order_book()
         target_price = self.price_feed.get_price()
         # Cancel orders
@@ -392,7 +394,8 @@ class OasisMarketMakerKeeper:
         # transactions are ordered so we are sure that the order placement will not 'overtake'
         # order cancellation.
         if order_book.orders_being_placed:
-            self.logger.debug("Other orders are being placed, not placing new orders")
+            self.logger.debug(
+                "Other orders are being placed, not placing new orders")
             return
 
         # Place new orders
@@ -403,8 +406,7 @@ class OasisMarketMakerKeeper:
                 our_buy_balance=self.our_available_balance(self.token_buy),
                 our_sell_balance=self.our_available_balance(self.token_sell),
                 target_price=target_price,
-            )[0]
-        )
+            )[0])
 
     def place_order_function(self, new_order: NewOrder):
         assert isinstance(new_order, NewOrder)
@@ -414,13 +416,11 @@ class OasisMarketMakerKeeper:
             pay_token = self.token_sell.address
             buy_token = self.token_buy.address
             new_order.buy_amount = self.buy_token.unnormalize_amount(
-                new_order.buy_amount
-            )
+                new_order.buy_amount)
             b_token = self.buy_token
             p_token = self.sell_token
             new_order.pay_amount = self.sell_token.unnormalize_amount(
-                new_order.pay_amount
-            )
+                new_order.pay_amount)
             token_name = self.sell_token.name
             quote_token = self.buy_token.name
 
@@ -429,13 +429,11 @@ class OasisMarketMakerKeeper:
             pay_token = self.token_buy.address
             buy_token = self.token_sell.address
             new_order.pay_amount = self.buy_token.unnormalize_amount(
-                new_order.pay_amount
-            )
+                new_order.pay_amount)
             p_token = self.buy_token
             b_token = self.sell_token
             new_order.buy_amount = self.sell_token.unnormalize_amount(
-                new_order.buy_amount
-            )
+                new_order.buy_amount)
             token_name = self.sell_token.name
             quote_token = self.buy_token.name
 
@@ -447,18 +445,18 @@ class OasisMarketMakerKeeper:
         ).transact(gas_price=self.gas_price)
 
         if new_order.is_sell:
-            new_order.buy_amount = self.buy_token.normalize_amount(new_order.buy_amount)
+            new_order.buy_amount = self.buy_token.normalize_amount(
+                new_order.buy_amount)
             new_order.pay_amount = self.sell_token.normalize_amount(
-                new_order.pay_amount
-            )
+                new_order.pay_amount)
             buy_or_sell_price = new_order.buy_amount / new_order.pay_amount
             amount = new_order.pay_amount
 
         else:
-            new_order.pay_amount = self.buy_token.normalize_amount(new_order.pay_amount)
+            new_order.pay_amount = self.buy_token.normalize_amount(
+                new_order.pay_amount)
             new_order.buy_amount = self.sell_token.normalize_amount(
-                new_order.buy_amount
-            )
+                new_order.buy_amount)
             buy_or_sell_price = new_order.pay_amount / new_order.buy_amount
             amount = new_order.buy_amount
 
@@ -483,7 +481,8 @@ class OasisMarketMakerKeeper:
             return None
 
     def cancel_order_function(self, order):
-        transact = self.otc.kill(order.order_id).transact(gas_price=self.gas_price)
+        transact = self.otc.kill(
+            order.order_id).transact(gas_price=self.gas_price)
         return transact is not None and transact.successful
 
 
